@@ -1,0 +1,6 @@
+# Normalize to LF in the repository so the same files check out cleanly
+# on every device. Shell scripts always LF; Windows batch always CRLF.
+* text=auto
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
