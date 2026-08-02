@@ -29,6 +29,13 @@
       "when": 1785675493202,
       "tag": "0003_memberships_read_before_context",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785678597040,
+      "tag": "0004_theme_palette_id",
+      "breakpoints": true
     }
   ]
 }

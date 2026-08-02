@@ -329,12 +329,22 @@ export const themeSettings = pgTable("theme_settings", {
     .primaryKey()
     .references(() => tenants.id, { onDelete: "cascade" }),
 
-  /** Named tokens: surface, onSurface, accent, onAccent, muted, border. */
+  /** Key into the curated palettes. Overrides layer on top of this. */
+  paletteId: text("palette_id").notNull().default("paper"),
+
+  /**
+   * SPARSE per-token overrides, not a full palette: { accent: "#c8102e" }.
+   * Tokens are paper, paperSunk, ink, muted, rule, accent, onAccent.
+   *
+   * Storing only what the owner actually changed means an untouched token keeps
+   * following the curated palette, so improving a palette improves every client
+   * still on it rather than only new signups.
+   */
   palette: jsonb("palette")
     .notNull()
     .default(sql`'{}'::jsonb`),
   /** Key into the curated pairings; every pairing includes an Arabic face. */
-  fontPair: text("font_pair").notNull().default("default"),
+  fontPair: text("font_pair").notNull().default("classic"),
   preset: layoutPreset("preset").notNull().default("list"),
 
   logoId: uuid("logo_id").references(() => media.id, { onDelete: "set null" }),

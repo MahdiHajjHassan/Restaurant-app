@@ -17,6 +17,7 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:test": "node scripts/db/migrate-test.mjs",
     "db:push": "drizzle-kit push",
     "db:seed": "psql -U postgres -h localhost -d restaurant_platform_dev -v ON_ERROR_STOP=1 -f scripts/db/seed.sql",
     "db:studio": "drizzle-kit studio",

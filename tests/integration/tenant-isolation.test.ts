@@ -5,6 +5,7 @@ import { createDatabase, type Database } from "@/core/db/client";
 import { TENANT_SCOPED_TABLES } from "@/core/db/schema";
 import { InvalidTenantIdError, withTenant } from "@/core/db/tenant";
 import { createMenuRepository } from "@/core/menu/repository";
+import { createThemeRepository } from "@/core/theme/repository";
 
 /**
  * The isolation suite.
@@ -245,5 +246,64 @@ describe("policy coverage", () => {
       );
 
     expect(unaccountedFor).toEqual([]);
+  });
+});
+
+describe("theme settings", () => {
+  it("does not leak one restaurant's theme into another's", async () => {
+    await withTenant(db, tenantA, async (session) => {
+      await createThemeRepository(session).saveTheme({
+        paletteId: "crimson",
+        overrides: { accent: "#123456" },
+        fontPair: "modern",
+        preset: "grid",
+      });
+    });
+
+    const themeB = await withTenant(db, tenantB, (session) =>
+      createThemeRepository(session).getTheme(),
+    );
+
+    // B never saved a theme, so it must see the platform default -- not A's.
+    expect(themeB.paletteId).toBe("paper");
+    expect(themeB.palette.accent).not.toBe("#123456");
+    expect(themeB.preset).toBe("list");
+  });
+
+  it("writes under the session tenant even if another id is in scope", async () => {
+    await withTenant(db, tenantA, async (session) => {
+      await createThemeRepository(session).saveTheme({
+        paletteId: "navy",
+        overrides: {},
+        fontPair: "warm",
+        preset: "editorial",
+      });
+    });
+
+    const themeA = await withTenant(db, tenantA, (session) =>
+      createThemeRepository(session).getTheme(),
+    );
+
+    expect(themeA.paletteId).toBe("navy");
+    expect(themeA.preset).toBe("editorial");
+  });
+
+  /*
+   * RLS on its own, with the repository bypassed. If a raw cross-tenant write
+   * silently succeeded, layer 1 would be the only thing standing between two
+   * restaurants -- which is exactly the arrangement this product cannot have.
+   */
+  it("blocks a raw insert for another tenant (RLS alone)", async () => {
+    const error = await captureError(
+      withTenant(db, tenantA, async (session) =>
+        session.tx.execute(
+          sql`INSERT INTO theme_settings (tenant_id, palette_id)
+              VALUES (${tenantB}::uuid, 'charcoal')`,
+        ),
+      ),
+    );
+
+    // 42501 is insufficient_privilege — the RLS policy refusing the row.
+    expect(pgErrorCode(error)).toBe("42501");
   });
 });
