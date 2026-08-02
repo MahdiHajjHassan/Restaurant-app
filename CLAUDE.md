@@ -2,11 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Starting a session? Read [`docs/STATUS.md`](docs/STATUS.md) first.** It says
+> where the project stands, what is blocking a sale, and what to do next — in
+> about two minutes. Keep it current when you finish a phase; a status file that
+> lies is worse than none.
+
 ## What this is
 
 A multi-tenant white-label platform: one codebase serving many restaurant websites. Each restaurant is a tenant with its own domain, theme, and bilingual (English/Arabic) menu. Roadmap and locked product decisions live in `docs/roadmap.md`.
 
-Currently at the end of **Phase 3 + 4b** (theming: palettes, font pairings, three layout presets, contrast validation; plus the media pipeline and owner image upload). Still to come: add/delete dishes and categories, password reset, and the platform operator console (Phase 5).
+Currently at the end of **Phase 3 + 4b** (theming: palettes, font pairings, three layout presets, contrast validation; plus the media pipeline and owner image upload).
+
+**The next thing that matters is Phase 4c — menu CRUD.** An owner cannot add a dish: create exists in `core/menu/repository.ts` but no admin route reaches it, and delete does not exist at all. Onboarding a client currently requires hand-written SQL, which is the one gap standing between this and a sellable product.
 
 The admin is served from `app.<PLATFORM_DOMAIN>` — locally `app.localhost:3000`. Create a user with:
 
