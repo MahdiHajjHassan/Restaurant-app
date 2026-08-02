@@ -96,6 +96,52 @@ WHERE NOT EXISTS (
   SELECT 1 FROM items WHERE tenant_id = ctx.tenant_id
 );
 
+-- Beta Bistro is priced in LBP, which has NO minor unit. 350000 must render as
+-- 350,000 and never 3,500.00 -- a second tenant on a second currency is what
+-- makes that verifiable end to end rather than only in a unit test.
+WITH ctx AS (
+  SELECT c.id AS category_id, c.tenant_id, c.name_en AS category
+  FROM categories c
+  JOIN tenants t ON t.id = c.tenant_id
+  WHERE t.slug = 'beta-bistro'
+)
+INSERT INTO items (tenant_id, category_id, name_en, name_ar, description_en, base_price_minor, sort_order, badges)
+SELECT ctx.tenant_id, ctx.category_id, i.name_en, i.name_ar, i.description_en, i.price, i.sort_order, i.badges
+FROM ctx
+JOIN (VALUES
+  ('Breakfast', 'Manakish Zaatar', 'منقوشة زعتر', 'Thyme, sesame, olive oil',  75000, 0, ARRAY['vegetarian']),
+  ('Breakfast', 'Foul Moudammas', 'فول مدمس',     'Fava beans, lemon, garlic', 90000, 1, ARRAY['vegetarian']),
+  ('Pastries',  'Cheese Fatayer', 'فطاير جبنة',   'Baked cheese pastry',       60000, 0, ARRAY[]::text[])
+) AS i(category, name_en, name_ar, description_en, price, sort_order, badges)
+  ON i.category = ctx.category
+WHERE NOT EXISTS (
+  SELECT 1 FROM items WHERE tenant_id = ctx.tenant_id
+);
+
+-- Size variants on one dish, so the menu exercises the variant row rather than
+-- only flat prices.
+WITH target AS (
+  SELECT i.id, i.tenant_id
+  FROM items i
+  JOIN tenants t ON t.id = i.tenant_id
+  WHERE t.slug = 'alpha-grill' AND i.name_en = 'Chicken Taouk'
+)
+INSERT INTO item_variants (tenant_id, item_id, name_en, name_ar, price_minor, sort_order)
+SELECT target.tenant_id, target.id, v.name_en, v.name_ar, v.price, v.sort_order
+FROM target, (VALUES
+  ('Small', 'صغير', 1250, 0),
+  ('Large', 'كبير', 1850, 1)
+) AS v(name_en, name_ar, price, sort_order)
+WHERE NOT EXISTS (
+  SELECT 1 FROM item_variants WHERE item_id = target.id
+);
+
+-- One dish sold out, so the struck-through treatment is always visible in the
+-- demo and the browser tests have something real to assert against.
+UPDATE items SET is_available = false
+WHERE name_en = 'Lamb Kafta'
+  AND tenant_id = (SELECT id FROM tenants WHERE slug = 'alpha-grill');
+
 -- Split shift plus a segment crossing midnight, so the "Open now" logic has a
 -- real case to be tested against rather than a tidy 09:00-17:00.
 WITH tenant AS (SELECT id FROM tenants WHERE slug = 'alpha-grill')

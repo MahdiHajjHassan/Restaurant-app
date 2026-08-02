@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A multi-tenant white-label platform: one codebase serving many restaurant websites. Each restaurant is a tenant with its own domain, theme, and bilingual (English/Arabic) menu. Roadmap and locked product decisions live in `docs/roadmap.md`.
 
-Currently at the end of **Phase 1** (tenant core: schema, RLS, repositories, host resolution). Phase 2 builds the public menu.
+Currently at the end of **Phase 2** (public menu site: bilingual menu, live open status, search, contact, SEO). Phase 3 is theming, Phase 4 the admin panel.
 
 ## Commands
 
@@ -72,6 +72,11 @@ Migrations run as the owner (`MIGRATION_DATABASE_URL`); the app only ever uses `
 - **Only verified domains resolve.** Anyone can point DNS at the platform; without `verifiedAt` they could serve another restaurant under a lookalike domain.
 - **Opening hours** are day-segments that may cross midnight, evaluated in the tenant's IANA timezone.
 - **Storage keys are attacker-influenced.** Always build them with `tenantScopedKey()`; `assertSafeKey()` rejects traversal and is covered by tests.
+
+- **Never `Promise.all` queries that share a transaction.** A transaction is pinned to one connection and PostgreSQL cannot serve concurrent queries on it — parallelising corrupts the protocol rather than going faster. Sequential awaits inside `withTenant`.
+- **Messages are plain data, never functions.** React Server Components refuse to pass functions to client components; templates use `{placeholders}` and `interpolate()`.
+- **Force `dir="ltr"` on times and numeric ranges inside Arabic text.** Bidi reorders LTR runs, so `11:00–15:00, 18:00–23:00` renders as `23:00–18:00 ,15:00–11:00` — read as closing before opening.
+- **`*.localhost` resolves in Chrome only.** Playwright's `request` fixture and Node use the OS resolver and will fail; hit `127.0.0.1` with an explicit `Host` header instead.
 
 `overrides` in `package.json` pins `sharp` and `postcss` past Next's bundled versions to patch libvips and PostCSS CVEs — this product resizes owner-uploaded photos, so those are reachable. Keep production `npm audit --omit=dev` at zero.
 

@@ -3,40 +3,47 @@
 /*
  * Theme tokens.
  *
- * These defaults are the platform's own look. Every tenant site overrides them
- * at render time by emitting a scoped :root block from theme_settings, which is
- * what makes per-restaurant theming free: no per-client CSS build, no forked
- * stylesheet, just different values behind the same variable names.
+ * These are the platform defaults. Every tenant overrides them at render time
+ * from theme_settings, which is what makes per-restaurant theming free: same
+ * components, same stylesheet, different variable values. No per-client CSS
+ * build, no forked stylesheet.
  *
- * Phase 3 populates palette and typography properly. Phase 0 only establishes
- * the mechanism.
+ * The default palette deliberately avoids cream-and-terracotta: it has to read
+ * as considered without reading as one particular restaurant's brand, since it
+ * is the starting point every owner customises. The accent is a bay-leaf green
+ * drawn from the cuisine, which also lets "Open now" be semantically green.
  */
 :root {
-  --color-surface: #ffffff;
-  --color-on-surface: #171717;
-  --color-muted: #6b7280;
-  --color-border: #e5e7eb;
-  --color-accent: #b91c1c;
-  --color-on-accent: #ffffff;
+  --color-paper: #fbfaf7;
+  --color-paper-sunk: #f1efe9;
+  --color-ink: #1a1a17;
+  --color-muted: #6e6a5f;
+  --color-rule: #ddd9cf;
+  --color-accent: #3f5d3a;
+  --color-on-accent: #fbfaf7;
 
-  --font-display: ui-sans-serif, system-ui, sans-serif;
-  --font-body: ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-family), Georgia, serif;
+  --font-body: var(--font-body-family), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-surface: #0a0a0a;
-    --color-on-surface: #ededed;
-    --color-muted: #9ca3af;
-    --color-border: #262626;
+    --color-paper: #14150f;
+    --color-paper-sunk: #1c1e16;
+    --color-ink: #edebe3;
+    --color-muted: #9a968a;
+    --color-rule: #32342a;
+    --color-accent: #8fb284;
+    --color-on-accent: #14150f;
   }
 }
 
 @theme inline {
-  --color-surface: var(--color-surface);
-  --color-on-surface: var(--color-on-surface);
+  --color-paper: var(--color-paper);
+  --color-paper-sunk: var(--color-paper-sunk);
+  --color-ink: var(--color-ink);
   --color-muted: var(--color-muted);
-  --color-border: var(--color-border);
+  --color-rule: var(--color-rule);
   --color-accent: var(--color-accent);
   --color-on-accent: var(--color-on-accent);
 
@@ -45,7 +52,55 @@
 }
 
 body {
-  background: var(--color-surface);
-  color: var(--color-on-surface);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * The leader rule.
+ *
+ * A menu's typographic signature is the line carrying your eye from a dish to
+ * its price. It is how menus have been set from diner placemats to Michelin
+ * cards, and it is what makes this read as a menu rather than as a product
+ * grid borrowed from a delivery app. It also needs no photography, which is
+ * the realistic case for most small restaurants.
+ *
+ * Built from flexbox so it mirrors under RTL with no extra rules.
+ */
+.leader {
+  flex: 1 1 auto;
+  min-inline-size: 1.5rem;
+  border-block-end: 1px dotted var(--color-rule);
+  transform: translateY(-0.3em);
+}
+
+/* Prices sit in a scannable column, so figures must not jitter in width. */
+.price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Visible keyboard focus everywhere, without announcing itself. */
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* A menu is a reference document. Motion must never delay finding a price. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }

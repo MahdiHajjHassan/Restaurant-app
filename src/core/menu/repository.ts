@@ -6,6 +6,9 @@ export type Category = typeof categories.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type ItemVariant = typeof itemVariants.$inferSelect;
 
+export type MenuItem = Item & { variants: ItemVariant[] };
+export type MenuCategory = Category & { items: MenuItem[] };
+
 /**
  * Callers never supply `tenantId` -- it is taken from the session. Accepting it
  * as input would reintroduce exactly the mistake this layer exists to prevent:
@@ -85,6 +88,71 @@ export function createMenuRepository(session: TenantSession) {
           ),
         )
         .orderBy(asc(itemVariants.sortOrder));
+    },
+
+    /**
+     * The whole public menu in three queries, not one per category.
+     *
+     * A 90-item menu across 8 categories would be 17 round trips if items and
+     * variants were fetched per parent. Three flat queries assembled in memory
+     * is what keeps the page inside its latency budget on a phone.
+     *
+     * The three run SEQUENTIALLY, not under Promise.all. A transaction is
+     * pinned to a single connection, and PostgreSQL cannot process concurrent
+     * queries on one connection -- issuing them in parallel corrupts the
+     * protocol rather than going faster.
+     *
+     * Sold-out items are included deliberately: they render struck through
+     * rather than vanishing, so a customer sees the dish exists and the owner
+     * restores it with one tap.
+     */
+    async getPublicMenu(): Promise<MenuCategory[]> {
+      const categoryRows = await tx
+        .select()
+        .from(categories)
+        .where(
+          and(eq(categories.tenantId, tenantId), eq(categories.isVisible, true)),
+        )
+        .orderBy(asc(categories.sortOrder), asc(categories.nameEn));
+
+      const itemRows = await tx
+        .select()
+        .from(items)
+        .where(eq(items.tenantId, tenantId))
+        .orderBy(asc(items.sortOrder), asc(items.nameEn));
+
+      const variantRows = await tx
+        .select()
+        .from(itemVariants)
+        .where(eq(itemVariants.tenantId, tenantId))
+        .orderBy(asc(itemVariants.sortOrder));
+
+      const variantsByItem = new Map<string, ItemVariant[]>();
+      for (const variant of variantRows) {
+        const list = variantsByItem.get(variant.itemId);
+        if (list) list.push(variant);
+        else variantsByItem.set(variant.itemId, [variant]);
+      }
+
+      const itemsByCategory = new Map<string, MenuItem[]>();
+      for (const item of itemRows) {
+        const withVariants: MenuItem = {
+          ...item,
+          variants: variantsByItem.get(item.id) ?? [],
+        };
+        const list = itemsByCategory.get(item.categoryId);
+        if (list) list.push(withVariants);
+        else itemsByCategory.set(item.categoryId, [withVariants]);
+      }
+
+      // Empty categories are dropped: a heading with nothing under it makes a
+      // menu look broken or unfinished.
+      return categoryRows
+        .map((category) => ({
+          ...category,
+          items: itemsByCategory.get(category.id) ?? [],
+        }))
+        .filter((category) => category.items.length > 0);
     },
 
     async createCategory(input: NewCategory): Promise<Category> {

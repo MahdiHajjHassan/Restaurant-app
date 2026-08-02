@@ -17,15 +17,28 @@ test.describe("tenant resolution", () => {
     await page.goto(site("alpha-grill.localhost"));
 
     await expect(page.getByRole("heading", { name: "Alpha Grill" })).toBeVisible();
-    await expect(page.getByText("USD")).toBeVisible();
+    await expect(page.getByText("Hummus")).toBeVisible();
   });
 
   test("serves a different tenant on a different hostname", async ({ page }) => {
     await page.goto(site("beta-bistro.localhost"));
 
     await expect(page.getByRole("heading", { name: "Beta Bistro" })).toBeVisible();
-    // Currency and locale are per-tenant, so the same route renders differently.
-    await expect(page.getByText("LBP")).toBeVisible();
+    await expect(page.getByText("Manakish Zaatar")).toBeVisible();
+    // Alpha Grill's dishes must not appear here. Same route, same code, two
+    // restaurants -- this is the whole product working or not.
+    await expect(page.getByText("Hummus")).toHaveCount(0);
+  });
+
+  test("formats each tenant's prices in its own currency", async ({ page }) => {
+    // Beta Bistro is priced in LBP, which has no minor unit. Rendering it as
+    // 3,500.00 instead of 350,000 would be wrong by two orders of magnitude
+    // and plausible enough to ship unnoticed.
+    await page.goto(site("beta-bistro.localhost"));
+
+    const body = await page.locator("body").innerText();
+    expect(body).toContain("75,000");
+    expect(body).not.toContain("750.00");
   });
 
   test("keeps the visitor's URL clean — rewrite, not redirect", async ({

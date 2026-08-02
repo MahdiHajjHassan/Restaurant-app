@@ -4,7 +4,7 @@ test.describe("foundation smoke", () => {
   test("serves the home page", async ({ page }) => {
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "Platform foundation" }),
+      page.getByRole("heading", { name: "Restaurant platform" }),
     ).toBeVisible();
   });
 
