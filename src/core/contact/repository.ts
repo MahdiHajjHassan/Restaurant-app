@@ -26,6 +26,27 @@ export function createContactRepository(session: TenantSession) {
         .where(eq(openingHours.tenantId, tenantId))
         .orderBy(asc(openingHours.dayOfWeek), asc(openingHours.opensAt));
     },
+
+    /**
+     * Replaces the whole week in one transaction.
+     *
+     * Delete-then-insert rather than diffing individual segments: the editor
+     * submits the complete week, and reconciling row by row would be more code
+     * for a worse guarantee. Because the caller is already inside withTenant,
+     * a failure rolls the whole week back rather than leaving a restaurant with
+     * half its hours missing.
+     */
+    async replaceOpeningHours(
+      segments: readonly { dayOfWeek: number; opensAt: string; closesAt: string }[],
+    ): Promise<void> {
+      await tx.delete(openingHours).where(eq(openingHours.tenantId, tenantId));
+
+      if (segments.length === 0) return;
+
+      await tx
+        .insert(openingHours)
+        .values(segments.map((segment) => ({ ...segment, tenantId })));
+    },
   };
 }
 

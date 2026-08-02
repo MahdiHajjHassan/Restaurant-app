@@ -6,7 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A multi-tenant white-label platform: one codebase serving many restaurant websites. Each restaurant is a tenant with its own domain, theme, and bilingual (English/Arabic) menu. Roadmap and locked product decisions live in `docs/roadmap.md`.
 
-Currently at the end of **Phase 2** (public menu site: bilingual menu, live open status, search, contact, SEO). Phase 3 is theming, Phase 4 the admin panel.
+Currently at the end of **Phase 4a** (admin panel: session auth, menu management, sold-out toggle, hours editor). Still to come: image upload, the theme editor (Phase 3), and the platform operator console (Phase 5).
+
+The admin is served from `app.<PLATFORM_DOMAIN>` — locally `app.localhost:3000`. Create a user with:
+
+```bash
+node scripts/create-admin.ts you@example.com yourpassword alpha-grill owner
+```
 
 ## Commands
 
@@ -77,6 +83,10 @@ Migrations run as the owner (`MIGRATION_DATABASE_URL`); the app only ever uses `
 - **Messages are plain data, never functions.** React Server Components refuse to pass functions to client components; templates use `{placeholders}` and `interpolate()`.
 - **Force `dir="ltr"` on times and numeric ranges inside Arabic text.** Bidi reorders LTR runs, so `11:00–15:00, 18:00–23:00` renders as `23:00–18:00 ,15:00–11:00` — read as closing before opening.
 - **`*.localhost` resolves in Chrome only.** Playwright's `request` fixture and Node use the OS resolver and will fail; hit `127.0.0.1` with an explicit `Host` header instead.
+- **Never `redirect()` from a Server Action in the admin.** The admin is reached by rewriting the `app.<platform>` host onto `/admin`; `redirect()` does a *client-side* navigation that resolves the path against the app's own route tree and lands on the platform home page. Return a target and call `window.location.assign()` so a real request goes through the proxy.
+- **Every admin Server Action calls `requireMembership` itself.** A layout guard does not run when an action is invoked directly, and `tenantId` arrives from the client.
+- **`memberships` and `domains` are deliberately outside RLS** — both are read *before* a tenant context exists. See migration `0003`. Everything else carrying `tenant_id` must have a policy, and a test enforces that.
+- **Admin e2e tests run serially** (`test.describe.configure({ mode: "serial" })`): they mutate one shared database, and in parallel they fail on each other's writes.
 
 `overrides` in `package.json` pins `sharp` and `postcss` past Next's bundled versions to patch libvips and PostCSS CVEs — this product resizes owner-uploaded photos, so those are reachable. Keep production `npm audit --omit=dev` at zero.
 

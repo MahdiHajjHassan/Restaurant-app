@@ -18,6 +18,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    // scripts/ are run directly by Node's TypeScript stripping, which resolves
+    // real file paths and so needs the .ts extension in the specifier.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [

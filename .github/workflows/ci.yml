@@ -119,6 +119,15 @@ jobs:
           npm run db:migrate
           psql -U postgres -h localhost -d restaurant_platform_test -v ON_ERROR_STOP=1 -f scripts/db/seed.sql
 
+      # Demo admins live here rather than in seed.sql, so credentials never
+      # travel with the data-seeding path that could one day touch production.
+      - name: Create demo admins
+        env:
+          DEMO_PASSWORD: demo-password-123
+        run: |
+          node scripts/create-admin.ts owner@alpha-grill.test "$DEMO_PASSWORD" alpha-grill owner
+          node scripts/create-admin.ts owner@beta-bistro.test "$DEMO_PASSWORD" beta-bistro owner
+
       - run: npx playwright install --with-deps chromium
 
       - run: npm run test:e2e

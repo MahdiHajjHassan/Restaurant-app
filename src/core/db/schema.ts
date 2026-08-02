@@ -120,6 +120,65 @@ export const users = pgTable("users", {
   ...timestamps,
 });
 
+/**
+ * Active login sessions.
+ *
+ * Only a SHA-256 hash of the session token is stored, never the token itself.
+ * A database leak then yields nothing an attacker can present as a session --
+ * the same reasoning that applies to passwords, and cheap to get right up
+ * front rather than after an incident.
+ */
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+
+    // Recorded so an owner can be told where a session came from if they ever
+    // report something odd.
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("sessions_user_id_idx").on(table.userId),
+    index("sessions_expires_at_idx").on(table.expiresAt),
+  ],
+);
+
+/**
+ * Login attempts, for rate limiting.
+ *
+ * Deliberately in the database rather than in memory: serverless instances are
+ * short-lived and numerous, so an in-process counter resets constantly and
+ * leaves you believing login is protected when it is not.
+ */
+export const loginAttempts = pgTable(
+  "login_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Lowercased email, or an IP address. */
+    identifier: text("identifier").notNull(),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("login_attempts_identifier_time_idx").on(
+      table.identifier,
+      table.attemptedAt,
+    ),
+  ],
+);
+
 // ─── Tenant-scoped tables (RLS applies) ───────────────────────────────────
 
 export const memberships = pgTable(
@@ -357,6 +416,11 @@ export const domainsRelations = relations(domains, ({ one }) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   memberships: many(memberships),
+  sessions: many(sessions),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
 
 export const membershipsRelations = relations(memberships, ({ one }) => ({
@@ -419,12 +483,16 @@ export const openingHoursRelations = relations(openingHours, ({ one }) => ({
 }));
 
 /**
- * Tables carrying tenant_id. The RLS migration iterates this list, and the
- * isolation test asserts every one of them actually has a policy -- so adding
- * a table without protecting it fails CI rather than shipping quietly.
+ * Tables carrying tenant_id AND protected by RLS. The isolation test asserts
+ * every one of them actually has a policy, so adding a table without
+ * protecting it fails CI rather than shipping quietly.
+ *
+ * `domains` and `memberships` also carry tenant_id but are deliberately
+ * excluded: both map an outside identifier (a hostname, a user) onto a tenant
+ * and must therefore be readable before any tenant context exists. See
+ * migration 0003.
  */
 export const TENANT_SCOPED_TABLES = [
-  "memberships",
   "media",
   "categories",
   "items",

@@ -15,6 +15,20 @@
       "when": 1785665934983,
       "tag": "0001_rls_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785670555462,
+      "tag": "0002_nebulous_crystal",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785675493202,
+      "tag": "0003_memberships_read_before_context",
+      "breakpoints": true
     }
   ]
 }

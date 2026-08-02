@@ -77,6 +77,15 @@ export function createMenuRepository(session: TenantSession) {
         .orderBy(asc(items.sortOrder), asc(items.nameEn));
     },
 
+    async findItem(itemId: string): Promise<Item | null> {
+      const rows = await tx
+        .select()
+        .from(items)
+        .where(and(eq(items.tenantId, tenantId), eq(items.id, itemId)))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
     async listVariants(itemId: string): Promise<ItemVariant[]> {
       return tx
         .select()
@@ -180,6 +189,34 @@ export function createMenuRepository(session: TenantSession) {
         .returning();
       if (!row) throw new Error("Insert returned no item variant row");
       return row;
+    },
+
+    /**
+     * Edits a dish. Callers pass only editable fields -- tenantId and id are
+     * never writable, so an item cannot be moved to another restaurant.
+     */
+    async updateItem(
+      itemId: string,
+      changes: Partial<
+        Pick<
+          NewItem,
+          | "nameEn"
+          | "nameAr"
+          | "descriptionEn"
+          | "descriptionAr"
+          | "basePriceMinor"
+          | "sortOrder"
+          | "badges"
+          | "categoryId"
+        >
+      >,
+    ): Promise<Item | null> {
+      const [row] = await tx
+        .update(items)
+        .set({ ...changes, updatedAt: new Date() })
+        .where(and(eq(items.tenantId, tenantId), eq(items.id, itemId)))
+        .returning();
+      return row ?? null;
     },
 
     /**

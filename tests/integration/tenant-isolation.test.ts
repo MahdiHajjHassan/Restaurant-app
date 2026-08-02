@@ -223,11 +223,12 @@ describe("policy coverage", () => {
   });
 
   it("every table carrying tenant_id is either scoped or a declared exception", async () => {
-    // `domains` carries tenant_id but must stay outside RLS: host-to-tenant
-    // resolution reads it before any tenant context can exist. Listing the
-    // exception here means a future unprotected table fails this test rather
-    // than quietly joining the exemption.
-    const DELIBERATELY_UNSCOPED = ["domains"];
+    // Both of these carry tenant_id but must stay outside RLS, because each is
+    // read BEFORE a tenant context can exist: `domains` resolves a hostname to
+    // a tenant, and `memberships` answers which restaurants a signed-in user
+    // may administer. Listing them here means a future unprotected table fails
+    // this test rather than quietly joining the exemption.
+    const DELIBERATELY_UNSCOPED = ["domains", "memberships"];
 
     const { rows } = await adminPool.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.columns
