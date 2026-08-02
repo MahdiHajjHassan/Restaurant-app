@@ -164,6 +164,27 @@ SELECT id, 'Hamra Street, Beirut', 'شارع الحمرا، بيروت', '+961 1
 FROM tenants WHERE slug = 'alpha-grill'
 ON CONFLICT (tenant_id) DO NOTHING;
 
-INSERT INTO theme_settings (tenant_id, preset, font_pair)
-SELECT id, 'list', 'default' FROM tenants WHERE slug IN ('alpha-grill', 'beta-bistro')
-ON CONFLICT (tenant_id) DO NOTHING;
+-- ─── Themes ───────────────────────────────────────────────────────────────
+--
+-- Alpha Grill gets an explicit theme: the photo-forward grid in crimson with
+-- geometric headings -- the flagship look, and the one demoed to owners.
+--
+-- Beta Bistro deliberately gets NO row. A tenant without theme settings must
+-- resolve to the platform default rather than failing, because theme is
+-- optional configuration and a missing row must never take a restaurant's menu
+-- offline. Seeding one tenant each way means both paths are exercised the
+-- moment anyone loads the demo, for the same reason there are two tenants at
+-- all: a single one hides exactly the bug this platform cannot afford.
+--
+-- DO UPDATE rather than DO NOTHING so re-seeding genuinely resets local drift,
+-- which is what the "idempotent" claim at the top of this file promises.
+INSERT INTO theme_settings (tenant_id, palette_id, font_pair, preset)
+SELECT id, 'crimson', 'modern', 'grid' FROM tenants WHERE slug = 'alpha-grill'
+ON CONFLICT (tenant_id) DO UPDATE
+SET palette_id = EXCLUDED.palette_id,
+    font_pair  = EXCLUDED.font_pair,
+    preset     = EXCLUDED.preset,
+    palette    = '{}'::jsonb;
+
+DELETE FROM theme_settings
+WHERE tenant_id = (SELECT id FROM tenants WHERE slug = 'beta-bistro');
