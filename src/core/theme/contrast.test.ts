@@ -107,8 +107,13 @@ describe("validatePalette", () => {
   });
 
   it("reports the measured ratio and the requirement", () => {
-    const [issue] = validatePalette({ ...READABLE, ink: "#ffffff" });
-    expect(issue.ratio).toBeCloseTo(1.0, 1);
-    expect(issue.required).toBe(4.5);
+    const issues = validatePalette({ ...READABLE, ink: "#ffffff" });
+    const issue = issues.find((i) => i.foreground === "ink");
+
+    // Named rather than positional: the order of RULES is an implementation
+    // detail, and a test that breaks when it changes is testing the wrong thing.
+    expect(issue).toBeDefined();
+    expect(issue?.ratio).toBeCloseTo(1.0, 1);
+    expect(issue?.required).toBe(4.5);
   });
 });
