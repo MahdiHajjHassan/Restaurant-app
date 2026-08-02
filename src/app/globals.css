@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/*
+ * Theme tokens.
+ *
+ * These defaults are the platform's own look. Every tenant site overrides them
+ * at render time by emitting a scoped :root block from theme_settings, which is
+ * what makes per-restaurant theming free: no per-client CSS build, no forked
+ * stylesheet, just different values behind the same variable names.
+ *
+ * Phase 3 populates palette and typography properly. Phase 0 only establishes
+ * the mechanism.
+ */
+:root {
+  --color-surface: #ffffff;
+  --color-on-surface: #171717;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-accent: #b91c1c;
+  --color-on-accent: #ffffff;
+
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-body: ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #0a0a0a;
+    --color-on-surface: #ededed;
+    --color-muted: #9ca3af;
+    --color-border: #262626;
+  }
+}
+
+@theme inline {
+  --color-surface: var(--color-surface);
+  --color-on-surface: var(--color-on-surface);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-on-accent: var(--color-on-accent);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+}
