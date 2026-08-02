@@ -52,12 +52,17 @@ jobs:
 
       - run: npm ci
 
-      - name: Bootstrap database roles and schemas
+      - name: Bootstrap roles and databases
         env:
           PGPASSWORD: postgres
         run: |
           psql -U postgres -h localhost -v ON_ERROR_STOP=1 -f scripts/db/bootstrap.sql
           psql -U postgres -h localhost -d restaurant_platform_test -v ON_ERROR_STOP=1 -f scripts/db/grants.sql
+
+      # Must run before the tests: the isolation suite asserts against real
+      # tables and real RLS policies, both of which arrive via migration.
+      - name: Apply migrations
+        run: npm run db:migrate
 
       - run: npm run typecheck
 
@@ -72,11 +77,28 @@ jobs:
     runs-on: ubuntu-latest
     needs: verify
 
+    # Tenant resolution is a database-backed path, so the browser job needs its
+    # own PostgreSQL and seed data -- the site under test resolves hostnames to
+    # real rows.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
+      DATABASE_URL: postgresql://app_user:app_dev_password@localhost:5432/restaurant_platform_test
+      MIGRATION_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/restaurant_platform_test
       PLATFORM_DOMAIN: localhost:3000
       STORAGE_DRIVER: local
       STORAGE_LOCAL_DIR: ./storage
-      DATABASE_URL: postgresql://app_user:app_dev_password@localhost:5432/restaurant_platform_test
 
     steps:
       - uses: actions/checkout@v4
@@ -87,6 +109,15 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Bootstrap, migrate and seed
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -U postgres -h localhost -v ON_ERROR_STOP=1 -f scripts/db/bootstrap.sql
+          psql -U postgres -h localhost -d restaurant_platform_test -v ON_ERROR_STOP=1 -f scripts/db/grants.sql
+          npm run db:migrate
+          psql -U postgres -h localhost -d restaurant_platform_test -v ON_ERROR_STOP=1 -f scripts/db/seed.sql
 
       - run: npx playwright install --with-deps chromium
 

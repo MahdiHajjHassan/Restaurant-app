@@ -18,6 +18,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
+    "db:seed": "psql -U postgres -h localhost -d restaurant_platform_dev -v ON_ERROR_STOP=1 -f scripts/db/seed.sql",
     "db:studio": "drizzle-kit studio",
     "verify": "npm run typecheck && npm run lint && npm run test"
   },

@@ -31,9 +31,12 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run dev",
+    // CI exercises the production build, because that is what customers get:
+    // dev-server behaviour differs on caching, error handling, and bundling,
+    // and a bug that only appears in production is the expensive kind.
+    command: process.env.CI ? "npm run build && npm run start" : "npm run dev",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 180_000,
   },
 });

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A multi-tenant white-label platform: one codebase serving many restaurant websites. Each restaurant is a tenant with its own domain, theme, and bilingual (English/Arabic) menu. Roadmap and locked product decisions live in `docs/roadmap.md`.
 
-Currently at the end of **Phase 0** (foundation). Phase 1 adds the tenant core.
+Currently at the end of **Phase 1** (tenant core: schema, RLS, repositories, host resolution). Phase 2 builds the public menu.
 
 ## Commands
 
@@ -26,8 +26,11 @@ Database (PostgreSQL 17 local, service `postgresql-x64-17`):
 ```bash
 npm run db:generate  # generate migration from schema changes
 npm run db:migrate   # apply migrations (runs as the owner role)
+npm run db:seed      # demo tenants — needed for the e2e suite
 npm run db:studio
 ```
+
+Seeded tenants resolve at `alpha-grill.localhost:3000`, `beta-bistro.localhost:3000` (Arabic default, LBP), `gamma-cafe.localhost:3000` (suspended), and `unverified.localhost:3000` (must 404). Chromium maps any `*.localhost` to loopback, so these work with no hosts-file editing.
 
 One-time setup on a fresh machine, after copying `.env.example` to `.env.local`:
 
@@ -65,7 +68,8 @@ Migrations run as the owner (`MIGRATION_DATABASE_URL`); the app only ever uses `
 - **Money is integer minor units** (`1250`), never floats, with the currency on the tenant. Format via `Intl.NumberFormat` so LBP gets 0 decimals and USD gets 2 — never hardcode the exponent. Prices render in Latin digits in both locales.
 - **Localization is paired columns** (`name_en` / `name_ar`), with English as the fallback when Arabic is blank. A third language is a deliberate ~1 week migration, not a free addition.
 - **Public tenant sites are cookie-free.** Locale lives in the URL path (`/`, `/ar`), never a cookie — cookies would break full-page CDN caching, which is what delivers the mobile performance budget. Admin is served from `app.<PLATFORM_DOMAIN>` only, so sessions stay scoped to one origin.
-- **Middleware must not query the database.** It only rewrites `Host` to a route segment; tenant resolution happens in the layout behind the tagged cache.
+- **`src/proxy.ts` must not query the database.** (Next 16 renamed the `middleware` file convention to `proxy`.) It only rewrites `Host` onto the `/sites/<host>` segment; tenant resolution happens in the route, memoised per request. That prefix cannot be underscore-prefixed — Next excludes private folders from routing — so `proxy.ts` explicitly 404s any request that arrives asking for `/sites/` directly, and the matcher must not exclude dot-containing paths or that guard is bypassed.
+- **Only verified domains resolve.** Anyone can point DNS at the platform; without `verifiedAt` they could serve another restaurant under a lookalike domain.
 - **Opening hours** are day-segments that may cross midnight, evaluated in the tenant's IANA timezone.
 - **Storage keys are attacker-influenced.** Always build them with `tenantScopedKey()`; `assertSafeKey()` rejects traversal and is covered by tests.
 
