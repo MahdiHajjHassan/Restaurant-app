@@ -14,6 +14,26 @@ The admin is served from `app.<PLATFORM_DOMAIN>` — locally `app.localhost:3000
 node scripts/create-admin.ts you@example.com yourpassword alpha-grill owner
 ```
 
+## Branch workflow
+
+Feature work happens on a branch, never directly on `main`.
+
+**Clean up behind you.** Once a branch is merged into `main` and pushed, delete
+it — locally and on the remote. Stale branches accumulate into a list nobody
+trusts, and then nobody can tell which ones still matter.
+
+```bash
+npm run verify && npm run test:e2e   # on the branch, before merging
+git checkout main && git merge <branch>
+npm run verify                       # again, on the MERGED result
+git push origin main
+git branch -d <branch>
+git push origin --delete <branch>    # only if it was ever pushed
+```
+
+Verify twice on purpose: a green run only proves the tree it ran on, and the
+merged tree is not the tree you tested.
+
 ## Commands
 
 ```bash
