@@ -22,21 +22,22 @@
   --color-accent: #3f5d3a;
   --color-on-accent: #fbfaf7;
 
+  --font-display-family: var(--font-amiri);
+  --font-body-family: var(--font-plex-arabic);
+
   --font-display: var(--font-display-family), Georgia, serif;
   --font-body: var(--font-body-family), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-paper: #14150f;
-    --color-paper-sunk: #1c1e16;
-    --color-ink: #edebe3;
-    --color-muted: #9a968a;
-    --color-rule: #32342a;
-    --color-accent: #8fb284;
-    --color-on-accent: #14150f;
-  }
-}
+/*
+ * There is deliberately no prefers-color-scheme block.
+ *
+ * A tenant palette is a choice the restaurant owner made. Inverting it on a
+ * visitor's device would override that choice silently -- the owner picks cream
+ * and green, sees their site render dark on someone else's phone, and concludes
+ * the product is broken. An owner who wants a dark site picks the charcoal
+ * palette, which is dark on every device.
+ */
 
 @theme inline {
   --color-paper: var(--color-paper);

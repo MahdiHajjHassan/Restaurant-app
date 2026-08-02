@@ -29,6 +29,15 @@ export function isLayoutPreset(value: unknown): value is LayoutPreset {
   );
 }
 
+/**
+ * Generic fallbacks appended after the webfont.
+ *
+ * Kept identical to the platform defaults in globals.css: if the webfont fails
+ * to load, a themed page and an unthemed one should degrade to the same thing.
+ */
+const DISPLAY_FALLBACKS = "Georgia, serif";
+const BODY_FALLBACKS = "ui-sans-serif, system-ui, sans-serif";
+
 export class InvalidThemeError extends Error {
   constructor(message: string) {
     super(message);
@@ -106,9 +115,24 @@ export function themeCssVariables(
     vars[CSS_VARIABLE[token]] = value;
   }
 
+  /*
+   * These set --font-display / --font-body directly, NOT the inner
+   * --font-*-family variables that globals.css uses for the platform default.
+   *
+   * Custom properties are substituted at computed-value time on the element
+   * where they are declared. globals.css declares
+   * `--font-display: var(--font-display-family), ...` on :root, so that var()
+   * is resolved against :root and inherits down as an already-baked font stack.
+   * Overriding --font-display-family further down the tree is therefore too
+   * late -- the heading keeps rendering in the platform default, which is a
+   * silent wrong-font bug rather than a visible failure.
+   *
+   * Declaring the final property here resolves var(--font-cairo) against the
+   * wrapper, where next/font's family variables are inherited from <html>.
+   */
   const pair = FONT_PAIRS[theme.fontPair];
-  vars["--font-display-family"] = `var(${pair.displayVariable})`;
-  vars["--font-body-family"] = `var(${pair.bodyVariable})`;
+  vars["--font-display"] = `var(${pair.displayVariable}), ${DISPLAY_FALLBACKS}`;
+  vars["--font-body"] = `var(${pair.bodyVariable}), ${BODY_FALLBACKS}`;
 
   return vars;
 }

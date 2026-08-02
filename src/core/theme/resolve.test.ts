@@ -82,8 +82,30 @@ describe("themeCssVariables", () => {
     const vars = themeCssVariables(theme);
     expect(vars["--color-paper"]).toBe("#fbfaf7");
     expect(vars["--color-on-accent"]).toBe("#fbfaf7");
-    expect(vars["--font-display-family"]).toBe("var(--font-amiri)");
-    expect(vars["--font-body-family"]).toBe("var(--font-plex-arabic)");
+  });
+
+  /*
+   * Regression guard. Emitting the inner --font-display-family instead of the
+   * final --font-display silently renders every heading in the platform default
+   * font: globals.css resolves `--font-display: var(--font-display-family)` at
+   * :root, so the substitution is already baked by the time the wrapper
+   * overrides the inner variable. Caught by reading computed styles in a real
+   * browser, not by any type or unit check.
+   */
+  it("sets the final font properties, not the inner family variables", () => {
+    const theme = resolveTheme({
+      paletteId: "paper",
+      overrides: null,
+      fontPair: "modern",
+      preset: null,
+    });
+    const vars = themeCssVariables(theme);
+
+    expect(vars["--font-display"]).toBe("var(--font-cairo), Georgia, serif");
+    expect(vars["--font-body"]).toBe(
+      "var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif",
+    );
+    expect(vars).not.toHaveProperty("--font-display-family");
   });
 
   it("emits only known keys", () => {

@@ -2,7 +2,9 @@ import { directionOf, localized, type Locale } from "@/core/i18n/locale";
 import { getMessages } from "@/core/i18n/messages";
 import { buildRestaurantSchema } from "@/core/seo/json-ld";
 import type { Tenant } from "@/core/tenant/repository";
+import { themeCssVariables } from "@/core/theme/resolve";
 import { MenuControls } from "@/ui/menu/menu-controls";
+import { ItemCard } from "@/ui/menu/item-card";
 import { ItemRow } from "@/ui/menu/item-row";
 import { ContactSection } from "./contact-section";
 import { OpenBadge } from "./open-badge";
@@ -33,6 +35,21 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
     label: localized(category.nameEn, category.nameAr, locale),
   }));
 
+  const themeVars = themeCssVariables(data.theme);
+  const preset = data.theme.preset;
+
+  /*
+   * The three presets differ only in how the item list is arranged. Every one
+   * renders the same fields through components that share the sold-out and
+   * search behaviour, so switching layout never changes what the menu says.
+   */
+  const itemListClassName =
+    preset === "grid"
+      ? "mt-3 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3"
+      : preset === "editorial"
+        ? "mt-3 flex flex-col gap-8"
+        : "mt-3 divide-y divide-[var(--color-rule)]";
+
   const schema = buildRestaurantSchema({
     name: tenant.name,
     url,
@@ -52,8 +69,25 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
     <div
       lang={locale}
       dir={direction}
-      className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 pb-16"
+      /*
+       * Theme tokens ride a React inline style object rather than a <style>
+       * tag. React escapes style values, so an owner-supplied colour has no
+       * path to becoming CSS syntax -- the injection surface is closed by
+       * construction, not only by the validation in themeCssVariables. It also
+       * keeps the nonce-based CSP planned for Phase 6 from inheriting an
+       * inline-<style> problem.
+       *
+       * Because the tokens are scoped to this element instead of :root, it has
+       * to paint the page background itself.
+       */
+      style={themeVars as React.CSSProperties}
+      className="flex min-h-full flex-1 flex-col bg-[var(--color-paper)] text-[var(--color-ink)]"
     >
+      <div
+        className={`mx-auto flex w-full flex-1 flex-col px-6 pb-16 ${
+          preset === "grid" ? "max-w-4xl" : "max-w-2xl"
+        }`}
+      >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
@@ -109,15 +143,25 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
                 <h2 className="font-display text-lg">
                   {localized(category.nameEn, category.nameAr, locale)}
                 </h2>
-                <ul className="mt-3 divide-y divide-[var(--color-rule)]">
-                  {category.items.map((item) => (
-                    <ItemRow
-                      key={item.id}
-                      item={item}
-                      currency={tenant.currency}
-                      locale={locale}
-                    />
-                  ))}
+                <ul className={itemListClassName} data-preset={preset}>
+                  {category.items.map((item) =>
+                    preset === "list" ? (
+                      <ItemRow
+                        key={item.id}
+                        item={item}
+                        currency={tenant.currency}
+                        locale={locale}
+                      />
+                    ) : (
+                      <ItemCard
+                        key={item.id}
+                        item={item}
+                        currency={tenant.currency}
+                        locale={locale}
+                        variant={preset === "grid" ? "grid" : "editorial"}
+                      />
+                    ),
+                  )}
                 </ul>
               </section>
             ))}
@@ -135,11 +179,12 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
         </>
       )}
 
-      <ContactSection
-        contact={data.contact}
-        hours={data.hours}
-        locale={locale}
-      />
+        <ContactSection
+          contact={data.contact}
+          hours={data.hours}
+          locale={locale}
+        />
+      </div>
     </div>
   );
 }
