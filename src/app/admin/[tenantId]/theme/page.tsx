@@ -4,6 +4,7 @@ import { createThemeRepository } from "@/core/theme/repository";
 import { THEME_TOKENS, type PaletteOverrides } from "@/core/theme/tokens";
 import { requireMembership } from "@/server/auth";
 import { db } from "@/server/db";
+import { LogoField } from "./logo-field";
 import { ThemeForm } from "./theme-form";
 
 export default async function ThemeAdminPage({
@@ -14,8 +15,14 @@ export default async function ThemeAdminPage({
   const { tenantId } = await params;
   const { membership, user } = await requireMembership(tenantId);
 
-  const theme = await withTenant(db, membership.tenantId, (session) =>
-    createThemeRepository(session).getTheme(),
+  const { theme, logo } = await withTenant(
+    db,
+    membership.tenantId,
+    async (session) => {
+      const repo = createThemeRepository(session);
+      // Sequential: these share one transaction, and therefore one connection.
+      return { theme: await repo.getTheme(), logo: await repo.getLogo() };
+    },
   );
 
   /*
@@ -40,6 +47,14 @@ export default async function ThemeAdminPage({
       <p className="mt-1 text-[0.8rem] text-[var(--color-muted)]">
         Colours, lettering, and layout for your site. Changes show immediately.
       </p>
+
+      <div className="mt-5 border-b border-[var(--color-rule)] pb-5">
+        <LogoField
+          tenantId={membership.tenantId}
+          restaurantName={membership.tenantName}
+          currentLogo={logo}
+        />
+      </div>
 
       <ThemeForm
         tenantId={membership.tenantId}

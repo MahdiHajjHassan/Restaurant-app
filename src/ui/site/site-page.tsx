@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { directionOf, localized, type Locale } from "@/core/i18n/locale";
 import { getMessages } from "@/core/i18n/messages";
 import { buildRestaurantSchema } from "@/core/seo/json-ld";
@@ -95,8 +96,31 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
 
       <header className="flex items-start justify-between gap-4 py-8">
         <div>
+          {/*
+            The logo replaces the restaurant name when set, with the name kept
+            as alt text so the page still says who it is to a screen reader and
+            to search engines.
+
+            Height is capped rather than trusted: an owner uploading a tall
+            image could otherwise push the menu below the fold, and the menu
+            being immediately visible is the decision this page is built on.
+          */}
           <h1 className="font-display text-[1.75rem] leading-tight">
-            {tenant.name}
+            {data.logo ? (
+              <Image
+                src={`/storage/${data.logo.storageKey}`}
+                alt={tenant.name}
+                width={data.logo.width}
+                height={data.logo.height}
+                sizes="160px"
+                placeholder={data.logo.blurDataUrl ? "blur" : "empty"}
+                blurDataURL={data.logo.blurDataUrl ?? undefined}
+                priority
+                className="h-10 w-auto max-w-[60vw] object-contain"
+              />
+            ) : (
+              tenant.name
+            )}
           </h1>
           <div className="mt-1.5">
             <OpenBadge

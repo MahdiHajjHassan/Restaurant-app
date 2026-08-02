@@ -29,6 +29,25 @@ export async function uploadItemPhoto(
 ): Promise<PhotoFormState> {
   const { membership } = await requireMembership(uuid.parse(tenantId));
 
+  /*
+   * Removal travels through the same action, and therefore the same form
+   * submission, as upload. Calling a server action from an onClick handler
+   * instead leaves the page waiting on revalidatePath to trigger a re-render,
+   * which is timing-dependent -- the owner taps "Remove" and the photo stays on
+   * screen until something else happens to refresh it.
+   */
+  if (formData.get("remove") === "true") {
+    await withTenant(db, membership.tenantId, (session) =>
+      createMenuRepository(session).updateItem(uuid.parse(itemId), {
+        imageId: null,
+      }),
+    );
+
+    revalidatePath(`/${membership.tenantId}`);
+    revalidatePath(`/${membership.tenantId}/items/${itemId}`);
+    return { error: null, saved: true };
+  }
+
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Choose a photo first." };
@@ -61,20 +80,3 @@ export async function uploadItemPhoto(
   return { error: null, saved: true };
 }
 
-/** Detaches the photo. The media row and object are left for now. */
-export async function removeItemPhoto(
-  tenantId: string,
-  itemId: string,
-): Promise<PhotoFormState> {
-  const { membership } = await requireMembership(uuid.parse(tenantId));
-
-  await withTenant(db, membership.tenantId, (session) =>
-    createMenuRepository(session).updateItem(uuid.parse(itemId), {
-      imageId: null,
-    }),
-  );
-
-  revalidatePath(`/${membership.tenantId}`);
-  revalidatePath(`/${membership.tenantId}/items/${itemId}`);
-  return { error: null, saved: true };
-}

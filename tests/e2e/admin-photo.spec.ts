@@ -119,6 +119,41 @@ test.describe("dish photo upload", () => {
     await expect(alert).toContainText(/not a photo/i);
   });
 
+  test("uploads a logo that replaces the name in the site header", async ({
+    page,
+  }) => {
+    const tenantId = await signInToTenant(page);
+    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+
+    await page.setInputFiles('input[name="logo"]', PHONE_PHOTO);
+    await expect(page.getByAltText(/Alpha Grill logo/i)).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page.goto(ALPHA_SITE, { waitUntil: "networkidle" });
+
+    /*
+     * The name must survive as alt text. Replacing the heading with a bare
+     * image would tell a screen reader and a search engine nothing about whose
+     * restaurant this is.
+     */
+    const logo = page.getByRole("heading").getByRole("img");
+    await expect(logo).toHaveAttribute("alt", "Alpha Grill");
+
+    // Capped height: an owner uploading a tall image must not push the menu
+    // below the fold.
+    const height = await logo.evaluate((el) => el.getBoundingClientRect().height);
+    expect(height).toBeLessThanOrEqual(40);
+
+    // Put it back so the suite can run twice.
+    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /remove logo/i }).click();
+    await expect(page.getByRole("button", { name: /remove logo/i })).toHaveCount(
+      0,
+      { timeout: 15_000 },
+    );
+  });
+
   test("removes a photo and the card degrades cleanly", async ({ page }) => {
     const tenantId = await signInToTenant(page);
     await openHummus(page, tenantId);
@@ -128,10 +163,31 @@ test.describe("dish photo upload", () => {
       page.getByRole("button", { name: /remove photo/i }),
     ).toHaveCount(0, { timeout: 15_000 });
 
-    // The grid must still render -- a dish with no photo is the common case,
-    // not an error state.
+    /*
+     * A dish with no photo is the common case, not an error state: the grid
+     * has to keep rendering, and the gap has to look deliberate.
+     *
+     * Scoped to the Hummus card specifically. The seed gives every other dish a
+     * placeholder, so asserting that NO images exist would be asserting the
+     * seed is empty rather than that removal worked.
+     */
     await page.goto(ALPHA_SITE, { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: "Hummus" })).toBeVisible();
-    await expect(page.locator("li[data-item] img")).toHaveCount(0);
+
+    const hummus = page
+      .locator("li[data-item]")
+      .filter({ has: page.getByRole("heading", { name: "Hummus" }) });
+
+    await expect(hummus).toHaveCount(1);
+    await expect(hummus.locator("img")).toHaveCount(0);
+
+    // The neighbouring dishes still show theirs, so the grid is intact.
+    await expect(page.locator("li[data-item] img").first()).toBeVisible();
+
+    // Put a photo back, so the suite can run twice.
+    await openHummus(page, tenantId);
+    await page.setInputFiles('input[type="file"]', PHONE_PHOTO);
+    await expect(page.getByText(/photo saved/i)).toBeVisible({
+      timeout: 30_000,
+    });
   });
 });

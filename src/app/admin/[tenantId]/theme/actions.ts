@@ -11,6 +11,7 @@ import { LAYOUT_PRESETS } from "@/core/theme/resolve";
 import { THEME_TOKENS, type PaletteOverrides } from "@/core/theme/tokens";
 import { requireMembership } from "@/server/auth";
 import { db } from "@/server/db";
+import { storeUpload } from "@/server/media";
 
 export interface ThemeFormState {
   error: string | null;
@@ -27,6 +28,49 @@ const schema = z.object({
   fontPair: z.enum(fontPairIds),
   preset: z.enum(LAYOUT_PRESETS),
 });
+
+/**
+ * Sets or clears the tenant's logo.
+ *
+ * Separate from updateTheme because it is a different interaction: an owner
+ * uploads a logo once at onboarding and then changes colours repeatedly, and
+ * making them re-post a file to change a palette would be absurd.
+ */
+export async function updateLogo(
+  tenantId: string,
+  _previous: ThemeFormState,
+  formData: FormData,
+): Promise<ThemeFormState> {
+  const { membership } = await requireMembership(
+    z.string().uuid().parse(tenantId),
+  );
+
+  if (formData.get("remove") === "true") {
+    await withTenant(db, membership.tenantId, (session) =>
+      createThemeRepository(session).setLogo(null),
+    );
+    revalidatePath(`/${membership.tenantId}/theme`);
+    return { error: null, saved: true };
+  }
+
+  const file = formData.get("logo");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a logo image first." };
+  }
+
+  const stored = await storeUpload(
+    membership.tenantId,
+    new Uint8Array(await file.arrayBuffer()),
+  );
+  if (!stored.ok) return { error: stored.reason };
+
+  await withTenant(db, membership.tenantId, (session) =>
+    createThemeRepository(session).setLogo(stored.mediaId),
+  );
+
+  revalidatePath(`/${membership.tenantId}/theme`);
+  return { error: null, saved: true };
+}
 
 export async function updateTheme(
   tenantId: string,

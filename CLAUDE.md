@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A multi-tenant white-label platform: one codebase serving many restaurant websites. Each restaurant is a tenant with its own domain, theme, and bilingual (English/Arabic) menu. Roadmap and locked product decisions live in `docs/roadmap.md`.
 
-Currently at the end of **Phase 4a** (admin panel: session auth, menu management, sold-out toggle, hours editor). Still to come: image upload, the theme editor (Phase 3), and the platform operator console (Phase 5).
+Currently at the end of **Phase 3 + 4b** (theming: palettes, font pairings, three layout presets, contrast validation; plus the media pipeline and owner image upload). Still to come: add/delete dishes and categories, password reset, and the platform operator console (Phase 5).
 
 The admin is served from `app.<PLATFORM_DOMAIN>` — locally `app.localhost:3000`. Create a user with:
 
@@ -30,10 +30,19 @@ Run one e2e test: `npx playwright test -g "serves the home page"`
 Database (PostgreSQL 17 local, service `postgresql-x64-17`):
 
 ```bash
-npm run db:generate  # generate migration from schema changes
-npm run db:migrate   # apply migrations (runs as the owner role)
-npm run db:seed      # demo tenants — needed for the e2e suite
+npm run db:generate     # generate migration from schema changes
+npm run db:migrate      # apply migrations to DEV (runs as the owner role)
+npm run db:migrate:test # same, against the test database
+npm run db:seed         # demo tenants — needed for the e2e suite
+npm run db:seed:media   # placeholder dish photos, so the grid preset demos
 npm run db:studio
+```
+
+The browser suite also needs image fixtures and a platform operator account:
+
+```bash
+npm run fixtures
+node scripts/create-admin.ts operator@platform.test demo-password-123 alpha-grill owner --platform-admin
 ```
 
 Seeded tenants resolve at `alpha-grill.localhost:3000`, `beta-bistro.localhost:3000` (Arabic default, LBP), `gamma-cafe.localhost:3000` (suspended), and `unverified.localhost:3000` (must 404). Chromium maps any `*.localhost` to loopback, so these work with no hosts-file editing.
@@ -86,7 +95,15 @@ Migrations run as the owner (`MIGRATION_DATABASE_URL`); the app only ever uses `
 - **Never `redirect()` from a Server Action in the admin.** The admin is reached by rewriting the `app.<platform>` host onto `/admin`; `redirect()` does a *client-side* navigation that resolves the path against the app's own route tree and lands on the platform home page. Return a target and call `window.location.assign()` so a real request goes through the proxy.
 - **Every admin Server Action calls `requireMembership` itself.** A layout guard does not run when an action is invoked directly, and `tenantId` arrives from the client.
 - **`memberships` and `domains` are deliberately outside RLS** — both are read *before* a tenant context exists. See migration `0003`. Everything else carrying `tenant_id` must have a policy, and a test enforces that.
-- **Admin e2e tests run serially** (`test.describe.configure({ mode: "serial" })`): they mutate one shared database, and in parallel they fail on each other's writes.
+- **Admin e2e tests run serially** (`test.describe.configure({ mode: "serial" })`): they mutate one shared database, and in parallel they fail on each other's writes. Note this only serializes *within* a Playwright project — `chromium` and `mobile` still run concurrently locally and can collide, so use `--workers=1` when a failure looks like a phantom. CI already sets `workers: 1`.
+- **Theme tokens render as a React inline `style` object, never a `<style>` tag.** Owner-supplied colours reach CSS, and React's escaping is what closes that injection surface; `themeCssVariables` re-validates and emits only known keys as the second layer.
+- **`themeCssVariables` emits `--font-display` / `--font-body`, not the inner `--font-*-family`.** `globals.css` declares `--font-display: var(--font-display-family)` on `:root`, so that substitution is baked at `:root` and inherits down already-resolved — overriding the inner variable further down the tree silently does nothing.
+- **`next/font` cannot pick a family at runtime**, so every display face is declared in the root layout and the theme chooses one by variable. They carry `preload: false`; the default preloads all of them, which fetched four families on every page load.
+- **Palette overrides are sparse** — only tokens the owner actually changed, so an untouched token keeps following the curated palette. A named `<input type="color">` posts on every submit and would materialise all seven; the visible control is unnamed and a hidden field carries only real changes.
+- **Uploads are sniffed by magic bytes**; the declared `Content-Type` is attacker-controlled and never trusted. SVG is deliberately off the allowlist — it can carry script and would be served same-origin.
+- **`sharp.rotate()` runs before re-encoding.** Re-encoding drops EXIF, so applying orientation afterwards leaves every portrait phone photo sideways with the tag that would have fixed it gone. The same re-encode is what strips GPS, which is a privacy promise with a test against a genuinely tagged fixture.
+- **`serverActions.bodySizeLimit` is 10mb.** The 1 MB default rejects essentially every phone photo and surfaces as a generic action error, which reads as a broken upload button.
+- **`npm run db:migrate` only migrates the DEV database locally.** Use `npm run db:migrate:test` for the test database, or the integration suite runs against a stale schema.
 
 `overrides` in `package.json` pins `sharp` and `postcss` past Next's bundled versions to patch libvips and PostCSS CVEs — this product resizes owner-uploaded photos, so those are reachable. Keep production `npm audit --omit=dev` at zero.
 

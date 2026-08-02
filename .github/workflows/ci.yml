@@ -129,6 +129,14 @@ jobs:
           node scripts/create-admin.ts owner@beta-bistro.test "$DEMO_PASSWORD" beta-bistro owner
           node scripts/create-admin.ts operator@platform.test "$DEMO_PASSWORD" alpha-grill owner --platform-admin
 
+      # Placeholder dish photos and the image fixtures the media tests upload.
+      # Generated, never downloaded, so CI needs no network and the repository
+      # carries no third party's photographs.
+      - name: Generate media fixtures and seed photos
+        run: |
+          npm run fixtures
+          npm run db:seed:media
+
       - run: npx playwright install --with-deps chromium
 
       - run: npm run test:e2e

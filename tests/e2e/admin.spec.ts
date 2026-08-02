@@ -58,9 +58,17 @@ test.describe("access control", () => {
 
     await expect(formAlert(page)).toContainText("do not match");
 
-    // Identical wording for an address that has no account at all, so this
-    // form cannot be used to enumerate customers.
-    await signIn(page, "nobody@nowhere.test", "whatever");
+    /*
+     * Identical wording for an address that has no account at all, so this
+     * form cannot be used to enumerate customers.
+     *
+     * A fresh address each run, deliberately. Rate limiting is DB-backed with a
+     * 15-minute window and never clears for an identifier that never succeeds,
+     * so a fixed address accumulates failures across runs until the suite
+     * starts failing on "Too many attempts" -- a real limiter doing its job,
+     * reported as a phantom product bug.
+     */
+    await signIn(page, `nobody-${Date.now()}@nowhere.test`, "whatever");
     await expect(formAlert(page)).toContainText("do not match");
   });
 

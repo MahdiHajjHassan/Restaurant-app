@@ -2,11 +2,7 @@
 
 import Image from "next/image";
 import { useActionState, useRef, useState } from "react";
-import {
-  removeItemPhoto,
-  uploadItemPhoto,
-  type PhotoFormState,
-} from "./photo-actions";
+import { uploadItemPhoto, type PhotoFormState } from "./photo-actions";
 
 interface PhotoFieldProps {
   tenantId: string;
@@ -34,8 +30,8 @@ export function PhotoField({
   const [state, formAction, pending] = useActionState(upload, initialState);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const removeRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [removing, setRemoving] = useState(false);
 
   return (
     <form
@@ -69,6 +65,7 @@ export function PhotoField({
         </div>
 
         <div className="min-w-0 flex-1">
+          <input type="hidden" name="remove" ref={removeRef} value="false" />
           <input
             type="file"
             name="photo"
@@ -92,17 +89,14 @@ export function PhotoField({
 
           {currentImage && !pending ? (
             <button
-              type="button"
-              disabled={removing}
-              onClick={async () => {
-                setRemoving(true);
-                await removeItemPhoto(tenantId, itemId);
+              type="submit"
+              onClick={() => {
+                if (removeRef.current) removeRef.current.value = "true";
                 setPreview(null);
-                setRemoving(false);
               }}
-              className="mt-2 text-[0.78rem] text-[var(--color-accent)] underline disabled:opacity-60"
+              className="mt-2 text-[0.78rem] text-[var(--color-accent)] underline"
             >
-              {removing ? "Removing…" : "Remove photo"}
+              Remove photo
             </button>
           ) : null}
         </div>

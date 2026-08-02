@@ -20,6 +20,8 @@
     "db:migrate:test": "node scripts/db/migrate-test.mjs",
     "db:push": "drizzle-kit push",
     "db:seed": "psql -U postgres -h localhost -d restaurant_platform_dev -v ON_ERROR_STOP=1 -f scripts/db/seed.sql",
+    "db:seed:media": "node scripts/seed-media.ts",
+    "fixtures": "node scripts/make-image-fixtures.mjs",
     "db:studio": "drizzle-kit studio",
     "verify": "npm run typecheck && npm run lint && npm run test"
   },

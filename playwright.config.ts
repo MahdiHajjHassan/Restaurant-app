@@ -9,7 +9,20 @@ export default defineConfig({
   // A stray .only would silently shrink the suite that guards production.
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  /*
+   * One worker, everywhere.
+   *
+   * These specs mutate ONE shared database: they toggle the same dish, change
+   * the same tenant's theme, and upload to the same restaurant.
+   * `test.describe.configure({ mode: "serial" })` only orders tests within a
+   * project, so the chromium and mobile projects still collided -- producing
+   * failures that read as product bugs and are not.
+   *
+   * The cost is roughly a minute. The alternative, a tenant fixture per
+   * project, is the right long-term fix and a much larger change; until then a
+   * suite that passes is worth more than a suite that finishes sooner.
+   */
+  workers: 1,
   reporter: process.env.CI ? "github" : "html",
 
   use: {

@@ -11,7 +11,10 @@ import {
   type MenuCategory,
 } from "@/core/menu/repository";
 import { isServable, type Tenant } from "@/core/tenant/repository";
-import { createThemeRepository } from "@/core/theme/repository";
+import {
+  createThemeRepository,
+  type TenantLogo,
+} from "@/core/theme/repository";
 import type { ResolvedTheme } from "@/core/theme/resolve";
 import { db } from "./db";
 import { getTenantByHost } from "./tenant";
@@ -21,6 +24,7 @@ export interface SiteData {
   contact: ContactSettings | null;
   hours: HourSegment[];
   theme: ResolvedTheme;
+  logo: TenantLogo | null;
 }
 
 /**
@@ -41,13 +45,16 @@ export const getSiteData = cache(async (tenantId: string): Promise<SiteData> => 
     const categories = await menu.getPublicMenu();
     const settings = await contact.getSettings();
     const hourRows = await contact.listOpeningHours();
-    const theme = await createThemeRepository(session).getTheme();
+    const themeRepo = createThemeRepository(session);
+    const theme = await themeRepo.getTheme();
+    const logo = await themeRepo.getLogo();
 
     return {
       menu: categories,
       contact: settings,
       hours: toHourSegments(hourRows),
       theme,
+      logo,
     };
   });
 });
