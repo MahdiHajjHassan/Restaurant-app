@@ -127,6 +127,7 @@ jobs:
         run: |
           node scripts/create-admin.ts owner@alpha-grill.test "$DEMO_PASSWORD" alpha-grill owner
           node scripts/create-admin.ts owner@beta-bistro.test "$DEMO_PASSWORD" beta-bistro owner
+          node scripts/create-admin.ts operator@platform.test "$DEMO_PASSWORD" alpha-grill owner --platform-admin
 
       - run: npx playwright install --with-deps chromium
 

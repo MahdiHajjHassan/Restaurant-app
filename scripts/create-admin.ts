@@ -13,11 +13,22 @@ import { hashPassword } from "../src/core/auth/password.ts";
 
 config({ path: ".env.local", quiet: true });
 
-const [email, password, slug, role = "owner"] = process.argv.slice(2);
+const args = process.argv.slice(2);
+
+/*
+ * Platform operators are a different thing from restaurant owners: the flag
+ * grants the operator console and, today, per-token colour entry in the theme
+ * editor. It lives here rather than being flipped by hand in SQL so that CI and
+ * a fresh machine can create the same account the tests assume.
+ */
+const isPlatformAdmin = args.includes("--platform-admin");
+const [email, password, slug, role = "owner"] = args.filter(
+  (arg) => !arg.startsWith("--"),
+);
 
 if (!email || !password || !slug) {
   console.error(
-    "Usage: node scripts/create-admin.ts <email> <password> <tenant-slug> [owner|staff]",
+    "Usage: node scripts/create-admin.ts <email> <password> <tenant-slug> [owner|staff] [--platform-admin]",
   );
   process.exit(1);
 }
@@ -36,11 +47,13 @@ try {
   const normalised = email.trim().toLowerCase();
 
   const user = await pool.query<{ id: string }>(
-    `INSERT INTO users (email, name, password_hash)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
+    `INSERT INTO users (email, name, password_hash, is_platform_admin)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (email) DO UPDATE
+     SET password_hash = EXCLUDED.password_hash,
+         is_platform_admin = EXCLUDED.is_platform_admin
      RETURNING id`,
-    [normalised, normalised.split("@")[0], passwordHash],
+    [normalised, normalised.split("@")[0], passwordHash, isPlatformAdmin],
   );
   const createdUser = user.rows[0];
   if (!createdUser) throw new Error("Upsert returned no user row");
@@ -63,7 +76,8 @@ try {
   );
 
   console.log(
-    `${normalised} can now administer ${targetTenant.name} as ${role}.`,
+    `${normalised} can now administer ${targetTenant.name} as ${role}` +
+      `${isPlatformAdmin ? ", with platform operator rights" : ""}.`,
   );
 } finally {
   await pool.end();

@@ -34,6 +34,14 @@ export default async function TenantAdminLayout({
             >
               Hours
             </Link>
+            {/* "Look", not "Theme" -- restaurant owners are not designers, and
+                the word should describe what they are about to change. */}
+            <Link
+              href={`/${tenantId}/theme`}
+              className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            >
+              Look
+            </Link>
           </nav>
         </div>
 
