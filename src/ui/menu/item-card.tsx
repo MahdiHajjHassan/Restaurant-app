@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Locale } from "@/core/i18n/locale";
 import { localized, localizedOptional } from "@/core/i18n/locale";
 import { getMessages } from "@/core/i18n/messages";
@@ -48,16 +49,45 @@ export function ItemCard({ item, currency, locale, variant }: ItemCardProps) {
 
   return (
     <li data-item data-search={searchText} className="flex flex-col">
-      {/*
-        Photo slot. A dish without one gets a flat surface rather than a broken
-        frame -- see the component note above.
-      */}
-      <div
-        className={`mb-2 aspect-[4/3] w-full rounded-md bg-[var(--color-paper-sunk)] ${
-          soldOut ? "opacity-60 grayscale" : ""
-        }`}
-        aria-hidden="true"
-      />
+      {item.image ? (
+        <div
+          className={`relative mb-2 aspect-[4/3] w-full overflow-hidden rounded-md bg-[var(--color-paper-sunk)] ${
+            // A full-colour photo beside struck-through text reads as a
+            // rendering bug, so the photo dims with the dish.
+            soldOut ? "opacity-60 grayscale" : ""
+          }`}
+        >
+          <Image
+            src={`/storage/${item.image.storageKey}`}
+            /*
+             * Empty alt on purpose: the dish name sits directly beneath this
+             * image, so describing it again is noise for a screen reader.
+             */
+            alt=""
+            fill
+            sizes={
+              variant === "grid"
+                ? "(max-width: 640px) 50vw, 33vw"
+                : "(max-width: 768px) 100vw, 42rem"
+            }
+            placeholder={item.image.blurDataUrl ? "blur" : "empty"}
+            blurDataURL={item.image.blurDataUrl ?? undefined}
+            className="object-cover"
+          />
+        </div>
+      ) : (
+        /*
+         * No photo is not an error. Most restaurants photograph part of their
+         * menu and never finish, so the gap has to look deliberate -- a flat
+         * surface, not an empty frame with a broken-image icon.
+         */
+        <div
+          className={`mb-2 aspect-[4/3] w-full rounded-md bg-[var(--color-paper-sunk)] ${
+            soldOut ? "opacity-60" : ""
+          }`}
+          aria-hidden="true"
+        />
+      )}
 
       <div className="flex items-baseline gap-2">
         <h3

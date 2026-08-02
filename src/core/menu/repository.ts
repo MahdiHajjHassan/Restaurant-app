@@ -1,12 +1,29 @@
 import { and, asc, eq } from "drizzle-orm";
 import type { TenantSession } from "../db/tenant";
-import { categories, itemVariants, items } from "../db/schema";
+import { categories, itemVariants, items, media } from "../db/schema";
 
 export type Category = typeof categories.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type ItemVariant = typeof itemVariants.$inferSelect;
 
-export type MenuItem = Item & { variants: ItemVariant[] };
+/**
+ * Just enough of a media row to render a card: the key to build a URL from, the
+ * intrinsic size so the layout can reserve space, and the inline placeholder.
+ * Deliberately not the whole row -- byte size and timestamps are of no interest
+ * to a customer-facing page.
+ */
+export interface ItemImage {
+  storageKey: string;
+  width: number;
+  height: number;
+  blurDataUrl: string | null;
+}
+
+export type MenuItem = Item & {
+  variants: ItemVariant[];
+  /** Null for a dish with no photo, which is the common case. */
+  image: ItemImage | null;
+};
 export type MenuCategory = Category & { items: MenuItem[] };
 
 /**
@@ -136,6 +153,27 @@ export function createMenuRepository(session: TenantSession) {
         .where(eq(itemVariants.tenantId, tenantId))
         .orderBy(asc(itemVariants.sortOrder));
 
+      /*
+       * Photos, fetched in one pass rather than joined onto the item query.
+       *
+       * A left join would repeat every item row per variant further down and
+       * make the assembly below harder to follow; one extra scoped SELECT is
+       * cheaper to read and to reason about. Sequential like the rest -- these
+       * share a transaction, and therefore one connection.
+       */
+      const mediaRows = await tx
+        .select({
+          id: media.id,
+          storageKey: media.storageKey,
+          width: media.width,
+          height: media.height,
+          blurDataUrl: media.blurDataUrl,
+        })
+        .from(media)
+        .where(eq(media.tenantId, tenantId));
+
+      const mediaById = new Map(mediaRows.map((row) => [row.id, row]));
+
       const variantsByItem = new Map<string, ItemVariant[]>();
       for (const variant of variantRows) {
         const list = variantsByItem.get(variant.itemId);
@@ -145,9 +183,19 @@ export function createMenuRepository(session: TenantSession) {
 
       const itemsByCategory = new Map<string, MenuItem[]>();
       for (const item of itemRows) {
+        const image = item.imageId ? mediaById.get(item.imageId) : undefined;
+
         const withVariants: MenuItem = {
           ...item,
           variants: variantsByItem.get(item.id) ?? [],
+          image: image
+            ? {
+                storageKey: image.storageKey,
+                width: image.width,
+                height: image.height,
+                blurDataUrl: image.blurDataUrl,
+              }
+            : null,
         };
         const list = itemsByCategory.get(item.categoryId);
         if (list) list.push(withVariants);
@@ -194,6 +242,13 @@ export function createMenuRepository(session: TenantSession) {
     /**
      * Edits a dish. Callers pass only editable fields -- tenantId and id are
      * never writable, so an item cannot be moved to another restaurant.
+     *
+     * `imageId` is a foreign key into `media`, and PostgreSQL evaluates FK
+     * checks as the table owner, which bypasses RLS. A caller who guessed
+     * another tenant's media UUID could therefore store it here. That is
+     * contained rather than prevented: getPublicMenu resolves photos from a
+     * tenant-scoped SELECT, so a foreign id simply resolves to no image. Worth
+     * knowing before anyone reads media by id without a tenant filter.
      */
     async updateItem(
       itemId: string,
@@ -208,6 +263,7 @@ export function createMenuRepository(session: TenantSession) {
           | "sortOrder"
           | "badges"
           | "categoryId"
+          | "imageId"
         >
       >,
     ): Promise<Item | null> {

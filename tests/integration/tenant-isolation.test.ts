@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDatabase, type Database } from "@/core/db/client";
 import { TENANT_SCOPED_TABLES } from "@/core/db/schema";
 import { InvalidTenantIdError, withTenant } from "@/core/db/tenant";
+import { createMediaRepository } from "@/core/media/repository";
 import { createMenuRepository } from "@/core/menu/repository";
 import { createThemeRepository } from "@/core/theme/repository";
 
@@ -246,6 +247,52 @@ describe("policy coverage", () => {
       );
 
     expect(unaccountedFor).toEqual([]);
+  });
+});
+
+describe("media", () => {
+  it("does not show one restaurant's uploads to another", async () => {
+    const mediaId = await withTenant(db, tenantA, async (session) => {
+      const row = await createMediaRepository(session).insert({
+        storageKey: `tenants/${tenantA}/media/${crypto.randomUUID()}.webp`,
+        contentType: "image/webp",
+        byteSize: 1234,
+        width: 800,
+        height: 600,
+        blurDataUrl: "data:image/webp;base64,AAAA",
+      });
+      return row.id;
+    });
+
+    // B knows the id and asks for it directly. It must still get nothing.
+    const seenByB = await withTenant(db, tenantB, (session) =>
+      createMediaRepository(session).findById(mediaId),
+    );
+    expect(seenByB).toBeNull();
+
+    const seenByA = await withTenant(db, tenantA, (session) =>
+      createMediaRepository(session).findById(mediaId),
+    );
+    expect(seenByA?.id).toBe(mediaId);
+  });
+
+  /*
+   * RLS alone, repository bypassed. A photo is not just a file: the storage key
+   * embeds the tenant id, so a cross-tenant row would hand one restaurant a
+   * readable URL into another's uploads.
+   */
+  it("blocks a raw insert for another tenant (RLS alone)", async () => {
+    const error = await captureError(
+      withTenant(db, tenantA, async (session) =>
+        session.tx.execute(
+          sql`INSERT INTO media (tenant_id, storage_key, content_type, byte_size, width, height)
+              VALUES (${tenantB}::uuid, 'tenants/x/media/y.webp', 'image/webp', 1, 1, 1)`,
+        ),
+      ),
+    );
+
+    // 42501 is insufficient_privilege -- the RLS policy refusing the row.
+    expect(pgErrorCode(error)).toBe("42501");
   });
 });
 

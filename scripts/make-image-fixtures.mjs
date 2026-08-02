@@ -68,7 +68,43 @@ if (rotatedMeta.orientation !== 6) {
 
 await writeFile("tests/fixtures/rotated.jpg", rotated);
 
+/*
+ * A realistic phone photo, for the end-to-end upload path: large, portrait,
+ * orientation-tagged AND GPS-tagged, the way a photo off an owner's phone
+ * actually arrives. The unit fixtures above each isolate one property; this one
+ * is deliberately all of them at once, because that is the real input.
+ */
+const phonePhoto = await sharp(
+  await sharp({
+    create: { width: 2000, height: 3000, channels: 3, background: "#8a5a2b" },
+  })
+    .withExif({
+      IFD0: { Make: "TestPhone", Model: "X1" },
+      GPS: {
+        GPSLatitudeRef: "N",
+        GPSLatitude: "33/1 53/1 12/1",
+        GPSLongitudeRef: "E",
+        GPSLongitude: "35/1 30/1 30/1",
+      },
+    })
+    .jpeg({ quality: 90 })
+    .toBuffer(),
+)
+  .withMetadata({ orientation: 6 })
+  .toBuffer();
+
+const phoneMeta = await sharp(phonePhoto).metadata();
+if (phoneMeta.orientation !== 6 || (phoneMeta.exif?.length ?? 0) < 100) {
+  throw new Error(
+    "Phone-photo fixture lost its orientation or EXIF; the upload test would prove nothing.",
+  );
+}
+
+await writeFile("tests/fixtures/phone-photo.jpg", phonePhoto);
+
 console.log(
-  `Wrote tests/fixtures/gps-tagged.jpg (${gpsMeta.exif.length} EXIF bytes) ` +
-    `and tests/fixtures/rotated.jpg (orientation ${rotatedMeta.orientation}).`,
+  `Wrote tests/fixtures/gps-tagged.jpg (${gpsMeta.exif.length} EXIF bytes), ` +
+    `tests/fixtures/rotated.jpg (orientation ${rotatedMeta.orientation}), and ` +
+    `tests/fixtures/phone-photo.jpg (${phoneMeta.width}x${phoneMeta.height}, ` +
+    `orientation ${phoneMeta.orientation}, ${phoneMeta.exif.length} EXIF bytes).`,
 );

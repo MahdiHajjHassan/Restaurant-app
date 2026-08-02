@@ -29,7 +29,9 @@ export const getAdminMenu = cache(
       const byCategory = new Map<string, MenuItem[]>();
       for (const item of items) {
         const list = byCategory.get(item.categoryId);
-        const entry: MenuItem = { ...item, variants: [] };
+        // The admin list shows names, prices and the sold-out toggle; it does
+        // not render photos or variants, so neither is loaded here.
+        const entry: MenuItem = { ...item, variants: [], image: null };
         if (list) list.push(entry);
         else byCategory.set(item.categoryId, [entry]);
       }

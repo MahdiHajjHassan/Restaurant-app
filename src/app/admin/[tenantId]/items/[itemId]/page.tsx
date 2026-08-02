@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import { withTenant } from "@/core/db/tenant";
+import { createMediaRepository } from "@/core/media/repository";
 import { createMenuRepository } from "@/core/menu/repository";
 import { toMajorUnits } from "@/core/money/format";
 import { requireMembership } from "@/server/auth";
 import { db } from "@/server/db";
 import { ItemForm } from "./item-form";
+import { PhotoField } from "./photo-field";
 
 export default async function EditItemPage({
   params,
@@ -14,9 +16,20 @@ export default async function EditItemPage({
   const { tenantId, itemId } = await params;
   const { membership } = await requireMembership(tenantId);
 
-  const item = await withTenant(db, membership.tenantId, async (session) =>
-    createMenuRepository(session).findItem(itemId),
-  );
+  const loaded = await withTenant(db, membership.tenantId, async (session) => {
+    const repo = createMenuRepository(session);
+
+    // Sequential: these share one transaction, and therefore one connection.
+    const found = await repo.findItem(itemId);
+    if (!found?.imageId) return { item: found, image: null };
+
+    return {
+      item: found,
+      image: await createMediaRepository(session).findById(found.imageId),
+    };
+  });
+
+  const { item, image } = loaded;
 
   // Tenant-scoped lookup, so an item belonging to another restaurant is simply
   // not found rather than forbidden.
@@ -39,6 +52,17 @@ export default async function EditItemPage({
             toMajorUnits(item.basePriceMinor, membership.currency),
           ),
         }}
+      />
+
+      <PhotoField
+        tenantId={tenantId}
+        itemId={item.id}
+        dishName={item.nameEn}
+        currentImage={
+          image
+            ? { storageKey: image.storageKey, blurDataUrl: image.blurDataUrl }
+            : null
+        }
       />
     </main>
   );
