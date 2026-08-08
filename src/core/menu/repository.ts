@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, count, eq, max } from "drizzle-orm";
 import type { TenantSession } from "../db/tenant";
 import { categories, itemVariants, items, media } from "../db/schema";
 
@@ -219,6 +219,78 @@ export function createMenuRepository(session: TenantSession) {
         .returning();
       if (!row) throw new Error("Insert returned no category row");
       return row;
+    },
+
+    async findCategory(categoryId: string): Promise<Category | null> {
+      const rows = await tx
+        .select()
+        .from(categories)
+        .where(
+          and(eq(categories.tenantId, tenantId), eq(categories.id, categoryId)),
+        )
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    async updateCategory(
+      categoryId: string,
+      changes: Partial<
+        Pick<NewCategory, "nameEn" | "nameAr" | "isVisible" | "sortOrder">
+      >,
+    ): Promise<Category | null> {
+      const [row] = await tx
+        .update(categories)
+        .set({ ...changes, updatedAt: new Date() })
+        .where(
+          and(eq(categories.tenantId, tenantId), eq(categories.id, categoryId)),
+        )
+        .returning();
+      return row ?? null;
+    },
+
+    /**
+     * Deletes a category AND, through `items.category_id ON DELETE CASCADE`,
+     * every dish under it.
+     *
+     * Returns the deleted row so the caller can name what went; null means the
+     * id belonged to another restaurant, or to nothing.
+     */
+    async deleteCategory(categoryId: string): Promise<Category | null> {
+      const [row] = await tx
+        .delete(categories)
+        .where(
+          and(eq(categories.tenantId, tenantId), eq(categories.id, categoryId)),
+        )
+        .returning();
+      return row ?? null;
+    },
+
+    /**
+     * The blast radius of deleting a category, for the confirmation to name.
+     * Counted from the database rather than from whatever the page rendered
+     * some minutes ago -- a stale count turns "and its 14 dishes" into a lie.
+     */
+    async countItemsInCategory(categoryId: string): Promise<number> {
+      const [row] = await tx
+        .select({ value: count() })
+        .from(items)
+        .where(
+          and(eq(items.tenantId, tenantId), eq(items.categoryId, categoryId)),
+        );
+      return row?.value ?? 0;
+    },
+
+    /**
+     * Appends rather than prepends: a new category belongs at the end of the
+     * menu until the owner moves it. max + 1, never count, so deleting a row in
+     * the middle cannot hand out a sort order that is already taken.
+     */
+    async nextCategorySortOrder(): Promise<number> {
+      const [row] = await tx
+        .select({ value: max(categories.sortOrder) })
+        .from(categories)
+        .where(eq(categories.tenantId, tenantId));
+      return (row?.value ?? -1) + 1;
     },
 
     async createItem(input: NewItem): Promise<Item> {
