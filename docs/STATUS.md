@@ -1,6 +1,6 @@
 # Status — read this first
 
-**Last updated:** 8 August 2026, at commit `fb6dc92` on `main`.
+**Last updated:** 8 August 2026, after Phase 4c (menu CRUD) merged to `main`.
 
 If you are a new session picking this up, this file orients you in about two
 minutes. Then read `CLAUDE.md` for the conventions that carry real consequences,
@@ -34,30 +34,51 @@ typechecking. Do not report something as working until you have watched it work.
 
 ## Where R1 stands
 
-Roughly **70% built**. It demos well. It is not sellable yet, for one specific
-reason below.
+Roughly **80% built**. An owner can now run their own menu end to end. What is
+still missing to make a sale is named below.
 
 | Phase | State |
 |---|---|
 | 0 Foundation, 1 Tenant core, 2 Public menu | Done |
 | 3 Theming | Done |
 | 4a Admin core, 4b Media | Done |
-| 4c Menu CRUD | **Not started — this is the blocker** |
-| 5 Operator console, 6 Hardening, 7 Commercial | Not started |
+| 4c Menu CRUD | Done |
+| 5 Operator console | **Not started — this is the blocker** |
+| 6 Hardening, 7 Commercial | Not started |
 
-Tests: **194 unit/integration** (against a real PostgreSQL) + **118 browser**
+Tests: **208 unit/integration** (against a real PostgreSQL) + **122 browser**
 tests across desktop and mobile.
 
 ## The one thing blocking a sale
 
-**A restaurant owner cannot add a dish.** They can edit, price, hide, reorder-by-
-data and photograph dishes that already exist. Creating one is not reachable from
-the admin, and deleting one does not exist anywhere — not even as a repository
-method in `src/core/menu/repository.ts`.
+**A new restaurant still has to be created with SQL.** The owner-facing half is
+done: they can add, rename, hide, reorder and delete sections and dishes, set
+sizes, and see it live immediately. What nobody can do from a browser is bring a
+restaurant into existence — create the tenant, attach its domain, mark it
+verified. That is still `scripts/db/seed.sql` and a `psql` session.
 
-Onboarding a client today therefore means hand-writing SQL against their menu,
-which contradicts both facts above. Phase 4c is the smallest change that turns
-this from a demo into a product. Do that before anything else in R1.
+So onboarding is half self-service and half hand-written SQL, which still
+contradicts the first fact above. **Phase 5 (operator console) is the next thing
+that matters.**
+
+### What Phase 4c actually delivered
+
+- A **quick-add row at the bottom of every section**: dish name, price, Enter.
+  It saves, clears, and keeps the cursor there for the next dish. No navigation.
+- Sections: create (with an Arabic name), rename, hide, reorder, delete.
+- Deleting a section **names its exact dish count first** — "Delete Grills and
+  its 14 dishes?" — because it cascades. The number comes from the database.
+- Dishes: delete and reorder, beside the sold-out toggle that already existed.
+- **Sizes** (Small / Large) on the dish page: add, edit, remove.
+- Reorder is **up/down buttons, not drag** — the roadmap asked for drag, but
+  drag competes with scrolling under a thumb and this admin gets used standing
+  in a kitchen. Buttons also work from a keyboard and for screen readers.
+
+**Measured, not assumed.** 30 dishes typed through quick-add on a dev server:
+median **149 ms** from pressing Enter to the row appearing, p90 177 ms, and no
+slowdown as the list grew — the last dishes were as fast as the first. A 90-item
+menu therefore costs about 14 seconds of waiting in total; the rest is typing
+speed. That was the design's main risk, and it holds.
 
 ## Getting running
 
@@ -131,15 +152,13 @@ fixture use the OS resolver and will fail; hit `127.0.0.1` with an explicit
 
 In order — each is a prerequisite for the next being worth doing:
 
-1. **Phase 4c — Menu CRUD. Designed and approved, not yet built.**
-   Spec: `docs/superpowers/specs/2026-08-08-menu-crud-design.md`. Start there —
-   the next step is an implementation plan, not code.
-2. **Phase 5 — Operator console.** Create a tenant, attach and verify a domain,
+1. **Phase 5 — Operator console.** Create a tenant, attach and verify a domain,
    impersonate for support. Also the right home for operator-only custom CSS,
-   which is specified but deliberately unbuilt.
-3. **Phase 6 — Hardening.** Sentry, structured logs, nonce-based CSP, backups
+   which is specified but deliberately unbuilt. This is the last thing standing
+   between the product and a same-day sale.
+2. **Phase 6 — Hardening.** Sentry, structured logs, nonce-based CSP, backups
    with a *tested* restore, Lighthouse budget in CI.
-4. **Phase 7 — Commercial.** Privacy policy, terms, Arabic help docs, pricing.
+3. **Phase 7 — Commercial.** Privacy policy, terms, Arabic help docs, pricing.
 
 **Password reset is deliberately not on that list.** There is no email adapter at
 all; resetting means running `scripts/create-admin.ts`. Acceptable at five
@@ -151,7 +170,11 @@ clients, not at fifty. Build it when support load says so.
   images are a separate step — ask before downloading anything.
 - The Lighthouse target (≥95 mobile on a 90-item menu) has **never been tested**.
   The seed has 5 dishes. The grid preset loads a photo per dish, which makes this
-  matter more than it did.
+  matter more than it did. Quick-add now makes a realistic 90-item menu cheap to
+  build, so this is finally testable.
+- **Sizes are add/edit/remove only — they do not reorder.** Small/Large/Family
+  come out in creation order. Nobody has asked for more; if they do, the dish
+  page is already close to needing its own route.
 - Nothing asserts cache-invalidation blast radius: writes call `revalidatePath`,
   but no test proves only the edited tenant is affected.
 - Storage objects from e2e uploads accumulate under the gitignored `storage/`

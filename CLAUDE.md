@@ -11,9 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A multi-tenant white-label platform: one codebase serving many restaurant websites. Each restaurant is a tenant with its own domain, theme, and bilingual (English/Arabic) menu. Roadmap and locked product decisions live in `docs/roadmap.md`.
 
-Currently at the end of **Phase 3 + 4b** (theming: palettes, font pairings, three layout presets, contrast validation; plus the media pipeline and owner image upload).
+Currently at the end of **Phase 4c** (menu CRUD: an owner builds and changes their whole menu themselves — quick-add, rename, hide, reorder, delete, sizes), on top of Phase 3 theming and the 4b media pipeline.
 
-**The next thing that matters is Phase 4c — menu CRUD.** An owner cannot add a dish: create exists in `core/menu/repository.ts` but no admin route reaches it, and delete does not exist at all. Onboarding a client currently requires hand-written SQL, which is the one gap standing between this and a sellable product.
+**The next thing that matters is Phase 5 — the operator console.** Creating a restaurant is still hand-written SQL: nothing in a browser can create a tenant, attach a domain and mark it verified. That is the last gap between this and a same-day sale.
 
 The admin is served from `app.<PLATFORM_DOMAIN>` — locally `app.localhost:3000`. Create a user with:
 
@@ -139,6 +139,13 @@ Migrations run as the owner (`MIGRATION_DATABASE_URL`); the app only ever uses `
 - **`themeCssVariables` emits `--font-display` / `--font-body`, not the inner `--font-*-family`.** `globals.css` declares `--font-display: var(--font-display-family)` on `:root`, so that substitution is baked at `:root` and inherits down already-resolved — overriding the inner variable further down the tree silently does nothing.
 - **`next/font` cannot pick a family at runtime**, so every display face is declared in the root layout and the theme chooses one by variable. They carry `preload: false`; the default preloads all of them, which fetched four families on every page load.
 - **Palette overrides are sparse** — only tokens the owner actually changed, so an untouched token keeps following the curated palette. A named `<input type="color">` posts on every submit and would materialise all seven; the visible control is unnamed and a hidden field carries only real changes.
+- **A foreign key does NOT enforce tenant isolation.** PostgreSQL evaluates FK checks as the table owner, which bypasses RLS — so `items.category_id` and `item_variants.item_id` arriving from a client are not vetted by any policy. Every action that takes a parent id looks it up through the tenant-scoped repository first. Same reasoning already documented for `imageId`.
+- **Reorder sends the full ordered list, never a "move up" delta.** Two open tabs each sending a swap interleave into an order neither owner asked for; the last full list to land is at least coherent. Ids belonging to another tenant match no row and are skipped, so a stale list degrades instead of failing.
+- **`FormData.get()` answers `null` for a field a form does not contain, and Zod `.optional()` rejects `null`.** A form that omits an optional field fails with "expected string, received null" — a type complaint shown to an owner who did nothing wrong. Normalise with `optionalText()` at the action boundary.
+- **Integration test files must not `TRUNCATE`.** Vitest runs test files concurrently against one database, so a truncate deletes another file's fixtures mid-run and the failure reads exactly like an isolation bug. Delete only your own slugs.
+- **`getByLabel` substring-matches.** "Price (USD)" also matches "New size price (USD)", so a loose selector breaks the day a page gains a field. Use `{ exact: true }` on any label that is a prefix of another.
+- **Only one `next dev` per directory.** Next 16 refuses a second instance regardless of port, so the browser suite cannot start its own server while a preview dev server is up — stop that one first, even when using `E2E_PORT`.
+- **Do not call `setState` inside an effect** — the React compiler's lint rejects it. For a form that must clear after submitting, leave the inputs uncontrolled: React resets an uncontrolled form once its action settles, and the effect is then free to do only what lives outside React (focus, `router.refresh()`).
 - **Uploads are sniffed by magic bytes**; the declared `Content-Type` is attacker-controlled and never trusted. SVG is deliberately off the allowlist — it can carry script and would be served same-origin.
 - **`sharp.rotate()` runs before re-encoding.** Re-encoding drops EXIF, so applying orientation afterwards leaves every portrait phone photo sideways with the tag that would have fixed it gone. The same re-encode is what strips GPS, which is a privacy promise with a test against a genuinely tagged fixture.
 - **`serverActions.bodySizeLimit` is 10mb.** The 1 MB default rejects essentially every phone photo and surfaces as a generic action error, which reads as a broken upload button.

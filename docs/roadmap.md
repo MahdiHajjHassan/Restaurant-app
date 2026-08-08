@@ -37,40 +37,37 @@ one specific reason named below.
 | 3 — Theming | **Done** | 5 palettes, 3 Arabic-ready font pairings, 3 layout presets, contrast validation |
 | 4a — Admin core | **Done** | Session auth, rate-limited login, edit dishes, sold-out toggle, hours editor |
 | 4b — Media | **Done** | Magic-byte validation, EXIF/GPS stripping, resize, blur placeholder, dish photos + logo |
-| 4c — Menu CRUD | **Not started** | — |
+| 4c — Menu CRUD | **Done** | Quick-add sections and dishes, rename/hide/delete, reorder, variants, empty states |
 | 5 — Operator console | **Not started** | — |
 | 6 — Hardening | **Not started** | — |
 | 7 — Commercial | **Not started** | — |
 
-Test coverage: 194 unit/integration (against a real PostgreSQL) + 118 browser
+Test coverage: 208 unit/integration (against a real PostgreSQL) + 122 browser
 tests across desktop and mobile.
 
 ### The one thing blocking a sale
 
-**A restaurant owner cannot add a dish.** They can edit, price, hide and
-photograph dishes that already exist — but creating one is not reachable from
-the admin, and deleting one does not exist anywhere, not even in the repository.
+**A new restaurant still has to be created with SQL.** An owner can now build
+and change their whole menu themselves — that was Phase 4c, and it is done. What
+no one can do from a browser is bring a restaurant into existence: create the
+tenant, attach a domain, mark it verified. That is `scripts/db/seed.sql` and a
+`psql` session.
 
-So onboarding a client today means hand-writing SQL against their menu. That
-directly contradicts the two facts this whole plan is built on: the 10th client
-must cost nearly nothing to onboard, and the owner must change things themselves
-without calling you. Everything else in R1 is polish next to this.
+So onboarding is now half self-service and half hand-written SQL, which still
+contradicts the fact this plan rests on: the 10th client must cost nearly
+nothing to onboard. Phase 5 closes it.
 
 ### Critical path to the first paying client
 
 In order. Each is a prerequisite for the next being worth doing.
 
-1. **Phase 4c — Menu CRUD.** Add and delete categories, dishes and variants;
-   drag-to-reorder. Note that `deleteCategory` / `deleteItem` do not exist in
-   `core/menu/repository.ts` yet, and deletion needs a decision about what
-   happens to a category that still holds dishes.
-2. **Phase 5 — Operator console.** Create a tenant, attach and verify a domain,
+1. **Phase 5 — Operator console.** Create a tenant, attach and verify a domain,
    impersonate for support. Today a new restaurant requires editing
    `scripts/db/seed.sql` by hand.
-3. **Phase 6 — Hardening.** Sentry, structured logs, nonce-based CSP (the
+2. **Phase 6 — Hardening.** Sentry, structured logs, nonce-based CSP (the
    roadmap is right that retrofitting this is misery — theme tokens are already
    inline styles), backups with a *tested* restore, Lighthouse budget in CI.
-4. **Phase 7 — Commercial.** Privacy policy, terms, Arabic help docs, pricing.
+3. **Phase 7 — Commercial.** Privacy policy, terms, Arabic help docs, pricing.
 
 **Password reset is unbuilt and deliberately not on that list.** There is no
 email adapter at all. An owner who forgets their password currently needs you to
@@ -257,10 +254,25 @@ declared content type, 8 MB cap, EXIF orientation applied *before* re-encoding,
 GPS stripped and verified against a genuinely tagged fixture, 1600px bound,
 inline blur placeholder. Dish photos and tenant logo.
 
-**4c — NOT STARTED, and this is what blocks a sale.** Adding a category, dish or
-variant is not reachable from the admin, and deletion does not exist even in
-`core/menu/repository.ts`. Drag-to-reorder is unbuilt; `sortOrder` exists and is
-respected, so this is UI work rather than a migration.
+**4c — DONE.** The admin menu page is a builder: a quick-add row at the bottom
+of every section takes a name and a price and saves on Enter, clearing and
+refocusing so the next dish can be typed immediately. Sections can be created,
+renamed in both languages, hidden, reordered and deleted; deleting one names its
+exact dish count first, because it cascades. Dishes and variants get the same
+treatment. No migration was needed.
+
+**Deviation: reorder is up/down buttons, not drag.** This roadmap specified
+drag. Drag is fine on a laptop and genuinely bad on a phone — a long list, one
+thumb, and a scroll gesture competing with the drag — and the admin is
+mobile-first by an earlier decision, so the mobile experience won. Buttons also
+work from a keyboard and are announced by screen readers. Revisit if owners
+actually ask for drag.
+
+**Measured, not assumed:** 30 dishes entered through quick-add on a dev server
+took a median of 149 ms from submit to the row appearing (p90 177 ms), with no
+degradation as the list grew — the last dishes were as fast as the first. System
+overhead for a 90-item menu is therefore about 14 seconds in total; typing time
+dominates completely, which is what the design was aiming for.
 
 **Password reset — NOT STARTED.** There is no email adapter yet. Resetting a
 password today means running `scripts/create-admin.ts`.
@@ -312,11 +324,12 @@ an intention.
 - **DONE** — `npm run typecheck && npm run lint && npm test` green (194 tests)
 - **DONE** — **Unit tests on the classic traps:** open-now across midnight segments and timezones (a 18:00–01:00 Saturday shift), money formatting across currencies and both locales, EN fallback when Arabic fields are blank
 - **DONE** — **Isolation test (the critical one):** seed two tenants; assert every repository method and every page route returns only the correct tenant's data; repeat with the repository layer bypassed to confirm RLS alone holds. Now also covers `theme_settings` and `media`
-- **DONE** — **Playwright:** load a tenant by host and see its menu; switch to Arabic and confirm RTL mirroring; toggle sold-out in admin and watch it grey out on the public site (118 tests, desktop + mobile)
+- **DONE** — **Playwright:** load a tenant by host and see its menu; switch to Arabic and confirm RTL mirroring; toggle sold-out in admin and watch it grey out on the public site (122 tests, desktop + mobile)
+- **DONE** — **Build a menu from nothing:** starting on a tenant with no categories at all, add a section, add three dishes through quick-add, reorder one, delete one, and confirm the result on the public site. The onboarding claim exists as a test rather than as a hope
 - **DONE** — Theming and media specifically: two tenants render different palettes and fonts; only the themed display face downloads; a contrast-failing palette is refused by the Server Action even when the disabled button is re-enabled from the console; a GPS-tagged portrait phone photo stores upright with no EXIF
 - **PENDING** — change a price and confirm only *that* tenant's cache invalidated. Writes call `revalidatePath`, but nothing asserts the blast radius
 - **PENDING** — **Lighthouse** on a seeded 90-item menu: performance ≥ 95 mobile, accessibility 100. The seed has 5 dishes, so the perf budget has never been tested at realistic menu size. Belongs with Phase 6
-- **PENDING** — **Manual:** onboard the demo restaurant end-to-end and time it. **Target: under 15 minutes** from zero to a live themed site. Cannot be attempted until Phase 4c and Phase 5 exist — today it needs hand-written SQL, so the honest current time is *not measurable*
+- **PARTLY DONE** — **Manual:** onboard the demo restaurant end-to-end and time it. **Target: under 15 minutes** from zero to a live themed site. The menu half is now measured: 30 dishes through quick-add ran at a median 149 ms per dish of system time with no growth as the list lengthened, so a 90-item menu costs ~14 seconds of waiting and is bounded by typing speed. The *whole* run still cannot be timed until Phase 5 — creating the tenant and attaching its domain is still hand-written SQL
 
 ---
 
