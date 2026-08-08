@@ -1,6 +1,6 @@
 # Status — read this first
 
-**Last updated:** 2 August 2026, at commit `0b15f70` on `main`.
+**Last updated:** 8 August 2026, at commit `fb6dc92` on `main`.
 
 If you are a new session picking this up, this file orients you in about two
 minutes. Then read `CLAUDE.md` for the conventions that carry real consequences,
@@ -131,10 +131,9 @@ fixture use the OS resolver and will fail; hit `127.0.0.1` with an explicit
 
 In order — each is a prerequisite for the next being worth doing:
 
-1. **Phase 4c — Menu CRUD.** Add/delete categories, dishes, variants;
-   drag-to-reorder. `sortOrder` already exists and is respected, so reordering is
-   UI work, not a migration. Deleting a category that still holds dishes needs a
-   product decision.
+1. **Phase 4c — Menu CRUD. Designed and approved, not yet built.**
+   Spec: `docs/superpowers/specs/2026-08-08-menu-crud-design.md`. Start there —
+   the next step is an implementation plan, not code.
 2. **Phase 5 — Operator console.** Create a tenant, attach and verify a domain,
    impersonate for support. Also the right home for operator-only custom CSS,
    which is specified but deliberately unbuilt.

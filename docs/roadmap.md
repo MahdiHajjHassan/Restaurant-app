@@ -24,7 +24,7 @@ Build in this order because each stage funds the next and each is independently 
 
 ---
 
-## Where we are — 2 August 2026
+## Where we are — 8 August 2026
 
 **R1 is roughly 70% built.** The product demos well and is not yet sellable, for
 one specific reason named below.
