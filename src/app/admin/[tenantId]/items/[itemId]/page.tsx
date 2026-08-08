@@ -7,6 +7,7 @@ import { requireMembership } from "@/server/auth";
 import { db } from "@/server/db";
 import { ItemForm } from "./item-form";
 import { PhotoField } from "./photo-field";
+import { VariantsSection } from "./variants-section";
 
 export default async function EditItemPage({
   params,
@@ -21,15 +22,19 @@ export default async function EditItemPage({
 
     // Sequential: these share one transaction, and therefore one connection.
     const found = await repo.findItem(itemId);
-    if (!found?.imageId) return { item: found, image: null };
+    if (!found) return { item: null, image: null, variants: [] };
+
+    const variants = await repo.listVariants(found.id);
+    if (!found.imageId) return { item: found, image: null, variants };
 
     return {
       item: found,
       image: await createMediaRepository(session).findById(found.imageId),
+      variants,
     };
   });
 
-  const { item, image } = loaded;
+  const { item, image, variants } = loaded;
 
   // Tenant-scoped lookup, so an item belonging to another restaurant is simply
   // not found rather than forbidden.
@@ -63,6 +68,18 @@ export default async function EditItemPage({
             ? { storageKey: image.storageKey, blurDataUrl: image.blurDataUrl }
             : null
         }
+      />
+
+      <VariantsSection
+        tenantId={tenantId}
+        itemId={item.id}
+        currency={membership.currency}
+        variants={variants.map((variant) => ({
+          id: variant.id,
+          nameEn: variant.nameEn,
+          nameAr: variant.nameAr ?? "",
+          price: String(toMajorUnits(variant.priceMinor, membership.currency)),
+        }))}
       />
     </main>
   );

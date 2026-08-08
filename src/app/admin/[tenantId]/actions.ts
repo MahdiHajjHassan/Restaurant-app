@@ -61,9 +61,9 @@ export async function updateItem(
 
   const parsed = itemInput.safeParse({
     nameEn: formData.get("nameEn"),
-    nameAr: formData.get("nameAr"),
-    descriptionEn: formData.get("descriptionEn"),
-    descriptionAr: formData.get("descriptionAr"),
+    nameAr: optionalText(formData.get("nameAr")),
+    descriptionEn: optionalText(formData.get("descriptionEn")),
+    descriptionAr: optionalText(formData.get("descriptionAr")),
     price: formData.get("price"),
   });
 
@@ -112,6 +112,19 @@ export interface MenuActionState {
 
 const uuidList = z.array(uuid).min(1);
 
+/**
+ * Reads an optional text field out of a form.
+ *
+ * `FormData.get()` answers null for a field the form does not contain, and
+ * Zod's `.optional()` accepts undefined but NOT null -- so a form that simply
+ * omits an optional field fails validation with "expected string, received
+ * null", which is a type complaint shown to a restaurant owner who did nothing
+ * wrong. Normalising here means a form is free to leave optional fields out.
+ */
+function optionalText(value: FormDataEntryValue | null): string | undefined {
+  return value === null ? undefined : String(value);
+}
+
 const categoryInput = z.object({
   nameEn: z.string().trim().min(1, "A section needs a name."),
   nameAr: z.string().trim().optional(),
@@ -126,7 +139,7 @@ export async function createCategory(
 
   const parsed = categoryInput.safeParse({
     nameEn: formData.get("nameEn"),
-    nameAr: formData.get("nameAr"),
+    nameAr: optionalText(formData.get("nameAr")),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Check the form." };
@@ -365,7 +378,7 @@ export async function createVariant(
 
   const parsed = variantInput.safeParse({
     nameEn: formData.get("nameEn"),
-    nameAr: formData.get("nameAr"),
+    nameAr: optionalText(formData.get("nameAr")),
     price: formData.get("price"),
   });
   if (!parsed.success) {
@@ -406,7 +419,7 @@ export async function updateVariant(
 
   const parsed = variantInput.safeParse({
     nameEn: formData.get("nameEn"),
-    nameAr: formData.get("nameAr"),
+    nameAr: optionalText(formData.get("nameAr")),
     price: formData.get("price"),
   });
   if (!parsed.success) {
