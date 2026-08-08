@@ -172,3 +172,186 @@ describe("categories", () => {
     expect(next).toBe(8);
   });
 });
+
+describe("dishes and variants", () => {
+  it("deletes a dish and returns what went", async () => {
+    const category = await makeCategory(tenantA, "Salads");
+    const dish = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).createItem({
+        categoryId: category.id,
+        nameEn: "Fattoush",
+        basePriceMinor: 800,
+      }),
+    );
+
+    const removed = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).deleteItem(dish.id),
+    );
+    expect(removed?.nameEn).toBe("Fattoush");
+
+    const again = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).findItem(dish.id),
+    );
+    expect(again).toBeNull();
+  });
+
+  it("will not delete another tenant's dish", async () => {
+    const category = await makeCategory(tenantB, "Beta Mains");
+    const dish = await withTenant(db, tenantB, (session) =>
+      createMenuRepository(session).createItem({
+        categoryId: category.id,
+        nameEn: "Beta Burger",
+        basePriceMinor: 1250,
+      }),
+    );
+
+    const attempt = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).deleteItem(dish.id),
+    );
+    expect(attempt).toBeNull();
+
+    const survivor = await withTenant(db, tenantB, (session) =>
+      createMenuRepository(session).findItem(dish.id),
+    );
+    expect(survivor?.nameEn).toBe("Beta Burger");
+  });
+
+  it("numbers new dishes per category, not per restaurant", async () => {
+    const first = await makeCategory(tenantA, "Sort One");
+    const second = await makeCategory(tenantA, "Sort Two");
+
+    await withTenant(db, tenantA, async (session) => {
+      const repo = createMenuRepository(session);
+      await repo.createItem({
+        categoryId: first.id,
+        nameEn: "A",
+        basePriceMinor: 100,
+        sortOrder: 0,
+      });
+      await repo.createItem({
+        categoryId: first.id,
+        nameEn: "B",
+        basePriceMinor: 100,
+        sortOrder: 1,
+      });
+    });
+
+    const nextInFirst = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).nextItemSortOrder(first.id),
+    );
+    const nextInSecond = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).nextItemSortOrder(second.id),
+    );
+
+    expect(nextInFirst).toBe(2);
+    // A dish added to an empty category starts at 0 even though the restaurant
+    // already has dishes elsewhere.
+    expect(nextInSecond).toBe(0);
+  });
+
+  it("edits and deletes a variant", async () => {
+    const category = await makeCategory(tenantA, "Pizza");
+    const dish = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).createItem({
+        categoryId: category.id,
+        nameEn: "Margherita",
+        basePriceMinor: 900,
+      }),
+    );
+    const variant = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).createVariant({
+        itemId: dish.id,
+        nameEn: "Smal",
+        priceMinor: 900,
+      }),
+    );
+
+    const edited = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).updateVariant(variant.id, {
+        nameEn: "Small",
+        priceMinor: 950,
+      }),
+    );
+    expect(edited?.nameEn).toBe("Small");
+    expect(edited?.priceMinor).toBe(950);
+
+    const removed = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).deleteVariant(variant.id),
+    );
+    expect(removed?.id).toBe(variant.id);
+
+    const left = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).listVariants(dish.id),
+    );
+    expect(left).toEqual([]);
+  });
+});
+
+describe("reordering", () => {
+  it("writes sort order from array position", async () => {
+    const drinks = await makeCategory(tenantA, "Reorder Drinks");
+
+    const ids = await withTenant(db, tenantA, async (session) => {
+      const repo = createMenuRepository(session);
+      const created = [];
+      for (const nameEn of ["Water", "Juice", "Coffee"]) {
+        created.push(
+          await repo.createItem({
+            categoryId: drinks.id,
+            nameEn,
+            basePriceMinor: 200,
+            sortOrder: created.length,
+          }),
+        );
+      }
+      return created.map((row) => row.id);
+    });
+
+    // Coffee to the front.
+    await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).reorderItems(drinks.id, [
+        ids[2]!,
+        ids[0]!,
+        ids[1]!,
+      ]),
+    );
+
+    const names = await withTenant(db, tenantA, async (session) =>
+      (await createMenuRepository(session).listItemsInCategory(drinks.id)).map(
+        (row) => row.nameEn,
+      ),
+    );
+    expect(names).toEqual(["Coffee", "Water", "Juice"]);
+  });
+
+  it("skips an id from another restaurant instead of refusing the whole reorder", async () => {
+    // A prefix no other test uses: the assertion below filters on it, and the
+    // reordered rows share sort_order 0 with categories left by earlier tests.
+    const mine = await makeCategory(tenantA, "Skip Mine");
+    const theirs = await makeCategory(tenantB, "Skip Theirs");
+    const second = await makeCategory(tenantA, "Skip Second");
+
+    // A stale or hostile client sends an id we must not touch, sandwiched
+    // between two we must. Refusing everything would leave the owner unable to
+    // reorder at all; obeying it would reach into another restaurant.
+    await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).reorderCategories([
+        second.id,
+        theirs.id,
+        mine.id,
+      ]),
+    );
+
+    const ordered = await withTenant(db, tenantA, async (session) =>
+      (await createMenuRepository(session).listCategories())
+        .filter((row) => row.nameEn.startsWith("Skip "))
+        .map((row) => row.nameEn),
+    );
+    expect(ordered).toEqual(["Skip Second", "Skip Mine"]);
+
+    const untouched = await withTenant(db, tenantB, (session) =>
+      createMenuRepository(session).findCategory(theirs.id),
+    );
+    expect(untouched?.sortOrder).toBe(0);
+  });
+});

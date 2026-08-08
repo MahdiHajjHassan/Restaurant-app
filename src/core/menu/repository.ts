@@ -362,6 +362,120 @@ export function createMenuRepository(session: TenantSession) {
         .returning();
       return row ?? null;
     },
+
+    /**
+     * Deletes a dish outright. There is no recycle bin by design: a `deleted_at`
+     * column taxes every query in the product forever, and retyping one dish is
+     * cheaper than carrying that.
+     */
+    async deleteItem(itemId: string): Promise<Item | null> {
+      const [row] = await tx
+        .delete(items)
+        .where(and(eq(items.tenantId, tenantId), eq(items.id, itemId)))
+        .returning();
+      return row ?? null;
+    },
+
+    /** Scoped to the category: each section numbers its own dishes from 0. */
+    async nextItemSortOrder(categoryId: string): Promise<number> {
+      const [row] = await tx
+        .select({ value: max(items.sortOrder) })
+        .from(items)
+        .where(
+          and(eq(items.tenantId, tenantId), eq(items.categoryId, categoryId)),
+        );
+      return (row?.value ?? -1) + 1;
+    },
+
+    async updateVariant(
+      variantId: string,
+      changes: Partial<
+        Pick<
+          NewItemVariant,
+          "nameEn" | "nameAr" | "priceMinor" | "isAvailable" | "sortOrder"
+        >
+      >,
+    ): Promise<ItemVariant | null> {
+      const [row] = await tx
+        .update(itemVariants)
+        .set({ ...changes, updatedAt: new Date() })
+        .where(
+          and(
+            eq(itemVariants.tenantId, tenantId),
+            eq(itemVariants.id, variantId),
+          ),
+        )
+        .returning();
+      return row ?? null;
+    },
+
+    async deleteVariant(variantId: string): Promise<ItemVariant | null> {
+      const [row] = await tx
+        .delete(itemVariants)
+        .where(
+          and(
+            eq(itemVariants.tenantId, tenantId),
+            eq(itemVariants.id, variantId),
+          ),
+        )
+        .returning();
+      return row ?? null;
+    },
+
+    async nextVariantSortOrder(itemId: string): Promise<number> {
+      const [row] = await tx
+        .select({ value: max(itemVariants.sortOrder) })
+        .from(itemVariants)
+        .where(
+          and(
+            eq(itemVariants.tenantId, tenantId),
+            eq(itemVariants.itemId, itemId),
+          ),
+        );
+      return (row?.value ?? -1) + 1;
+    },
+
+    /**
+     * Rewrites every category's sort order from its position in `orderedIds`.
+     *
+     * The full ordered list rather than a "move up" delta: two open tabs each
+     * sending a swap can interleave into an order neither owner asked for,
+     * whereas the last full list to land is at least coherent.
+     *
+     * An id belonging to another restaurant simply matches no row -- the
+     * tenantId filter sees to that -- so a stale or hostile list degrades to
+     * reordering the rows it legitimately names, rather than failing entirely.
+     *
+     * Sequential, never Promise.all: these share one transaction, and therefore
+     * one connection.
+     */
+    async reorderCategories(orderedIds: readonly string[]): Promise<void> {
+      for (const [index, id] of orderedIds.entries()) {
+        await tx
+          .update(categories)
+          .set({ sortOrder: index, updatedAt: new Date() })
+          .where(and(eq(categories.tenantId, tenantId), eq(categories.id, id)));
+      }
+    },
+
+    /** Same contract as reorderCategories, scoped to one category's dishes. */
+    async reorderItems(
+      categoryId: string,
+      orderedIds: readonly string[],
+    ): Promise<void> {
+      for (const [index, id] of orderedIds.entries()) {
+        await tx
+          .update(items)
+          .set({ sortOrder: index, updatedAt: new Date() })
+          .where(
+            and(
+              eq(items.tenantId, tenantId),
+              eq(items.categoryId, categoryId),
+              eq(items.id, id),
+            ),
+          );
+      }
+    },
   };
 }
 
