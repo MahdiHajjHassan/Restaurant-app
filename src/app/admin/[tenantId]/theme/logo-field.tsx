@@ -99,6 +99,26 @@ export function LogoField({
           {state.error}
         </p>
       ) : null}
+
+      {/*
+        The only signal that the change landed.
+
+        Note the Remove button is rendered `currentLogo && !pending`, so it
+        disappears the moment submission starts -- its absence says nothing
+        about whether the write finished, and must not be treated as
+        confirmation by a human or a test.
+      */}
+      {state.saved && !pending ? (
+        <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
+          Logo saved.
+        </p>
+      ) : null}
+
+      {state.removed && !pending ? (
+        <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
+          Logo removed. Your restaurant name shows instead.
+        </p>
+      ) : null}
     </form>
   );
 }

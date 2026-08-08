@@ -117,9 +117,19 @@ export function PhotoField({
         </p>
       ) : null}
 
+      {/*
+        Says what actually happened. "Photo saved" after a removal is a small
+        lie, and it is also the only signal telling an owner the change landed.
+      */}
       {state.saved && !pending ? (
         <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
           Photo saved. It is on your site now.
+        </p>
+      ) : null}
+
+      {state.removed && !pending ? (
+        <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
+          Photo removed. The dish still shows on your menu.
         </p>
       ) : null}
     </form>

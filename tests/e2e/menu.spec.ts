@@ -1,7 +1,14 @@
 import { expect, test } from "@playwright/test";
+import { PORT, site } from "./support/urls";
 
-/** Requires the seed: scripts/db/seed.sql */
-const ALPHA = "http://alpha-grill.localhost:3000";
+/**
+ * Requires the seed: scripts/db/seed.sql
+ *
+ * Read-only throughout, which is what makes it safe to run in parallel and
+ * across projects. Anything that writes belongs on a sandbox tenant instead --
+ * see tests/e2e/support/sandbox.ts.
+ */
+const ALPHA = site("alpha-grill.localhost");
 
 test.describe("public menu", () => {
   test("shows categories, dishes and formatted prices", async ({ page }) => {
@@ -146,13 +153,14 @@ test.describe("search engine surface", () => {
   test("serves a per-tenant sitemap and robots", async ({ request }) => {
     const headers = { Host: "alpha-grill.localhost" };
 
-    const sitemap = await request.get("http://127.0.0.1:3000/sitemap.xml", {
-      headers,
-    });
+    const sitemap = await request.get(
+      `http://127.0.0.1:${PORT}/sitemap.xml`,
+      { headers },
+    );
     expect(sitemap.status()).toBe(200);
     expect(await sitemap.text()).toContain("alpha-grill.localhost");
 
-    const robots = await request.get("http://127.0.0.1:3000/robots.txt", {
+    const robots = await request.get(`http://127.0.0.1:${PORT}/robots.txt`, {
       headers,
     });
     expect(robots.status()).toBe(200);
@@ -162,7 +170,7 @@ test.describe("search engine surface", () => {
   test("tells crawlers to stay away from an unknown host", async ({
     request,
   }) => {
-    const robots = await request.get("http://127.0.0.1:3000/robots.txt", {
+    const robots = await request.get(`http://127.0.0.1:${PORT}/robots.txt`, {
       headers: { Host: "nobody-here.localhost" },
     });
     expect(await robots.text()).toContain("Disallow: /");

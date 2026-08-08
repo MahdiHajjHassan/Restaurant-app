@@ -76,7 +76,17 @@ node scripts/create-admin.ts operator@platform.test demo-password-123 alpha-gril
 npm run dev
 ```
 
-Verify with `npm run verify` then `npm run test:e2e`.
+Verify with `npm run verify` then `E2E_PORT=3100 npm run test:e2e`.
+
+The admin accounts above are for **demoing by hand**. The browser suite does not
+need them: any spec that writes provisions its own restaurant and owner through
+`tests/e2e/support/sandbox.ts`, per Playwright project and parallel slot, and
+rebuilds them each run. The seeded demo tenants stay read-only for the whole
+suite.
+
+Use `E2E_PORT` rather than the default 3000: the suite reuses a server already
+on its port, so running it while `npm run dev` is up would silently test
+whatever that server is serving and report it as a pass.
 
 **Environment gotchas that will waste your time:**
 
@@ -145,8 +155,8 @@ clients, not at fifty. Build it when support load says so.
   matter more than it did.
 - Nothing asserts cache-invalidation blast radius: writes call `revalidatePath`,
   but no test proves only the edited tenant is affected.
-- Playwright runs single-worker because both projects share one database.
-  Correctness is fine; parallelism is a pending optimisation.
+- Storage objects from e2e uploads accumulate under the gitignored `storage/`
+  directory. The `media` rows are cleaned per run; the files behind them are not.
 - The R2 storage driver throws. Local disk only until a client goes live.
 
 ## Where the detail lives

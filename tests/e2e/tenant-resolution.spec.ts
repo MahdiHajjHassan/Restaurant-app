@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { PLATFORM, site as origin } from "./support/urls";
 
 /**
  * Host-based tenant resolution, end to end.
@@ -6,11 +7,10 @@ import { expect, test } from "@playwright/test";
  * Chromium resolves any *.localhost name to the loopback address, so these hit
  * the real middleware with a real Host header rather than simulating one.
  *
- * Requires the seed: scripts/db/seed.sql
+ * Requires the seed: scripts/db/seed.sql. Read-only, like menu.spec.ts.
  */
 
-const PORT = 3000;
-const site = (host: string) => `http://${host}:${PORT}/`;
+const site = (host: string) => `${origin(host)}/`;
 
 test.describe("tenant resolution", () => {
   test("serves a tenant by its verified hostname", async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe("tenant resolution", () => {
     // be addressable directly -- otherwise any visitor could load any tenant by
     // path, sidestepping hostname verification entirely.
     const response = await page.goto(
-      `http://localhost:${PORT}/sites/alpha-grill.localhost`,
+      `${PLATFORM}/sites/alpha-grill.localhost`,
     );
 
     expect(response?.status()).toBe(404);

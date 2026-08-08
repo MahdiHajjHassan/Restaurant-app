@@ -55,6 +55,15 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     "drizzle/**",
+    /*
+     * Git worktrees live here and are full checkouts, with their own
+     * node_modules once anyone installs in them. Without this, `npm run lint`
+     * walks every dependency in every worktree and reports thousands of
+     * problems from code this repository does not own -- which makes
+     * `npm run verify` fail for a reason that has nothing to do with the change
+     * being verified.
+     */
+    ".claude/worktrees/**",
   ]),
 ]);
 

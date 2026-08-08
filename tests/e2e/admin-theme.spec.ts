@@ -1,24 +1,32 @@
-import { expect, test, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import {
+  expect,
+  OPERATOR_EMAIL,
+  SANDBOX_PASSWORD,
+  test,
+  type Sandbox,
+} from "./support/sandbox";
+import { ADMIN } from "./support/urls";
 
 /**
  * The theme editor.
  *
- * Requires the seed plus the demo admins:
- *   node scripts/create-admin.ts owner@alpha-grill.test <password> alpha-grill owner
- *   node scripts/create-admin.ts operator@platform.test <password> alpha-grill owner --platform-admin
+ * Self-provisioning: the `sandbox` fixture gives this Playwright project its
+ * own restaurant, reset to the platform default theme (paper / classic / list)
+ * before the first test runs. Nothing here touches the seeded demo tenants,
+ * which theming.spec.ts asserts against read-only and in parallel.
+ *
+ * The platform-operator account is the one exception -- per-token colour entry
+ * is an operator capability, and there is one operator, not one per project.
+ * The operator tests still write only to this project's own tenant.
  */
 /*
- * Serial for the same reason as admin.spec.ts: these mutate one shared
- * database, and the tenant's saved theme is global state later assertions
- * depend on.
+ * Serial within the project: these share one restaurant and one saved theme, so
+ * they must not interleave. Across projects, isolation is by data -- see
+ * tests/e2e/support/sandbox.ts.
  */
 test.describe.configure({ mode: "serial" });
 
-const ADMIN = "http://app.localhost:3000";
-const ALPHA_SITE = "http://alpha-grill.localhost:3000";
-const ALPHA_OWNER = "owner@alpha-grill.test";
-const OPERATOR = "operator@platform.test";
-const DEMO_PASSWORD = "demo-password-123";
 
 /**
  * Clicks the visual card rather than the input.
@@ -43,7 +51,7 @@ async function save(page: Page) {
 }
 
 /**
- * Sets a React-controlled input without typing.
+ * Sets a React-controlled colour input without typing.
  *
  * `<input type=color>` cannot be driven by keyboard in a headless browser, so
  * the value is written through the native setter and an input event dispatched
@@ -67,108 +75,131 @@ async function setColour(page: Page, token: string, value: string) {
   );
 }
 
-async function signIn(page: Page, email: string): Promise<string> {
+async function signIn(page: Page, email: string, password: string) {
   await page.context().clearCookies();
   await page.goto(`${ADMIN}/login`);
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(DEMO_PASSWORD);
+  await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/[0-9a-f-]{36}$/, { timeout: 15_000 });
-  return page.url().split("/").pop()!;
+
+  /*
+   * Wait for the session to actually exist before anyone navigates away.
+   *
+   * The click starts a Server Action; navigating immediately races it, and the
+   * next page is then fetched without a session cookie and redirected straight
+   * back to /login -- which surfaces as "the control isn't on the page" rather
+   * than as an auth failure, and is a slow lesson to learn twice.
+   *
+   * Leaving /login is the signal rather than a specific destination: an owner
+   * with one restaurant lands on it, while the operator holds memberships in
+   * several and does not.
+   */
+  await page.waitForURL((url) => !url.pathname.endsWith("/login"), {
+    timeout: 15_000,
+  });
 }
 
-/** Restores the seeded theme so the suite can run twice. */
-async function restoreSeedTheme(page: Page, tenantId: string) {
-  await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+/** Signs the sandbox owner in and opens their theme editor. */
+async function openTheme(page: Page, sandbox: Sandbox) {
+  await signIn(page, sandbox.owner, sandbox.password);
+  await page.waitForURL(new RegExp(`/${sandbox.id}$`), { timeout: 15_000 });
+  await page.goto(`${ADMIN}/${sandbox.id}/theme`, { waitUntil: "networkidle" });
+}
 
-  // Clear any operator colour overrides first. Re-picking an already-selected
-  // palette fires no change event, so it cannot be relied on to reset them.
-  const reset = page.getByRole("button", {
-    name: /reset colours to the palette/i,
-  });
-  if (await reset.isVisible().catch(() => false)) await reset.click();
+/**
+ * The operator has memberships in more than one restaurant, so signing in does
+ * not land anywhere in particular -- navigate explicitly.
+ */
+async function openThemeAsOperator(page: Page, sandbox: Sandbox) {
+  await signIn(page, OPERATOR_EMAIL, SANDBOX_PASSWORD);
+  await page.goto(`${ADMIN}/${sandbox.id}/theme`, { waitUntil: "networkidle" });
+}
 
-  await pick(page, "paletteId", "crimson");
-  await pick(page, "fontPair", "modern");
-  await pick(page, "preset", "grid");
-  await save(page);
+/** Returns the tenant palette actually rendered on the public site. */
+async function siteToken(page: Page, url: string, token: string) {
+  await page.goto(url);
+  const value = await page
+    .locator("[style*='--color-accent']")
+    .first()
+    .evaluate(
+      (el, name) => getComputedStyle(el).getPropertyValue(name),
+      token,
+    );
+  return value.trim();
 }
 
 test.describe("theme editor", () => {
   test("owner changes the palette and the public site follows", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, ALPHA_OWNER);
-
-    await page.getByRole("link", { name: "Look" }).click();
-    await page.waitForLoadState("networkidle");
+    await openTheme(page, sandbox);
 
     await pick(page, "paletteId", "navy");
     await save(page);
 
     // Loading the real site rather than trusting what the browser drew: this
     // proves the change reached the database.
-    await page.goto(ALPHA_SITE);
-    const accent = await page
-      .locator("[style*='--color-accent']")
-      .first()
-      .evaluate((el) => getComputedStyle(el).getPropertyValue("--color-accent"));
-    expect(accent.trim()).toBe("#1c3f6e");
-
-    await restoreSeedTheme(page, tenantId);
+    expect(await siteToken(page, sandbox.site, "--color-accent")).toBe(
+      "#1c3f6e",
+    );
   });
 
   test("changing the layout preset reaches the public site", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, ALPHA_OWNER);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openTheme(page, sandbox);
 
+    await pick(page, "preset", "grid");
+    await save(page);
+
+    await page.goto(sandbox.site);
+    await expect(page.locator("ul[data-preset]").first()).toHaveAttribute(
+      "data-preset",
+      "grid",
+    );
+
+    // Back to list, and its typographic signature must come with it.
+    await openTheme(page, sandbox);
     await pick(page, "preset", "list");
     await save(page);
 
-    await page.goto(ALPHA_SITE);
-    await expect(page.locator("ul[data-preset]").first()).toHaveAttribute(
-      "data-preset",
-      "list",
-    );
-    // The list preset's typographic signature must come back with it.
+    await page.goto(sandbox.site);
     await expect(page.locator(".leader").first()).toBeAttached();
-
-    await restoreSeedTheme(page, tenantId);
   });
 
   test("changing the font pairing reaches the public site", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, ALPHA_OWNER);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openTheme(page, sandbox);
 
     await pick(page, "fontPair", "warm");
     await save(page);
 
-    await page.goto(ALPHA_SITE);
-    await expect(page.getByRole("heading", { name: "Alpha Grill" })).toHaveCSS(
+    await page.goto(sandbox.site);
+    await expect(page.getByRole("heading", { name: sandbox.name })).toHaveCSS(
       "font-family",
       /Tajawal/,
     );
-
-    await restoreSeedTheme(page, tenantId);
   });
 
   test("hides operator-only colour controls from an owner", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, ALPHA_OWNER);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openTheme(page, sandbox);
 
     await expect(page.getByText("Exact colours")).toHaveCount(0);
     await expect(page.locator("input[type=color]")).toHaveCount(0);
   });
 
-  test("shows a live preview of the candidate theme", async ({ page }) => {
-    const tenantId = await signIn(page, ALPHA_OWNER);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+  test("shows a live preview of the candidate theme", async ({
+    page,
+    sandbox,
+  }) => {
+    await openTheme(page, sandbox);
 
     const preview = page.locator("[style*='--color-accent']").last();
 
@@ -179,17 +210,15 @@ test.describe("theme editor", () => {
 
     await pick(page, "paletteId", "navy");
     await expect(preview).toHaveCSS("background-color", "rgb(255, 255, 255)");
-
-    await restoreSeedTheme(page, tenantId);
   });
 });
 
 test.describe("operator colour controls", () => {
   test("shows per-token colour entry to a platform operator", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, OPERATOR);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openThemeAsOperator(page, sandbox);
 
     await expect(page.getByText("Exact colours")).toBeVisible();
     await expect(page.locator("input[type=color]")).toHaveCount(7);
@@ -207,12 +236,17 @@ test.describe("operator colour controls", () => {
    */
   test("refuses an unreadable palette even when the button is re-enabled", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, OPERATOR);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openThemeAsOperator(page, sandbox);
 
-    // Near-white secondary text on a white background: unreadable, and the
-    // exact mistake owners make because they never think to touch `muted`.
+    // Reset to a known palette so the assertion below names a fixed colour.
+    await pick(page, "paletteId", "paper");
+    await save(page);
+    await openThemeAsOperator(page, sandbox);
+
+    // Near-white secondary text on near-white paper: unreadable, and the exact
+    // mistake owners make because they never think to touch `muted`.
     await setColour(page, "muted", "#fbfbfb");
 
     const submit = page.getByRole("button", { name: /save look/i });
@@ -228,44 +262,34 @@ test.describe("operator colour controls", () => {
     });
 
     /*
-     * Two alerts are expected here, and the distinction is the point: the
-     * client's live warning ("hard to read") is advisory, while the Server
-     * Action's refusal ("not readable") is the boundary. Only the second one
-     * proves the save was actually rejected server-side.
+     * Two alerts are expected, and the distinction is the point: the client's
+     * live warning ("hard to read") is advisory, while the Server Action's
+     * refusal ("not readable") is the boundary. Only the second proves the save
+     * was rejected server-side.
      */
     await expect(
-      page.getByRole("alert").filter({ hasText: /Those colours are not readable/i }),
+      page
+        .getByRole("alert")
+        .filter({ hasText: /Those colours are not readable/i }),
     ).toBeVisible();
     await expect(page.getByRole("status")).toHaveCount(0);
 
-    // And nothing was written: the site keeps its seeded muted colour.
-    await page.goto(ALPHA_SITE);
-    const muted = await page
-      .locator("[style*='--color-accent']")
-      .first()
-      .evaluate((el) => getComputedStyle(el).getPropertyValue("--color-muted"));
-    expect(muted.trim()).toBe("#5f5c58");
-
-    await restoreSeedTheme(page, tenantId);
+    // And nothing was written: the site keeps the paper palette's muted tone.
+    expect(await siteToken(page, sandbox.site, "--color-muted")).toBe("#6e6a5f");
   });
 
   test("saves a readable operator override and the site follows", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, OPERATOR);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openThemeAsOperator(page, sandbox);
 
     await setColour(page, "accent", "#7b1020");
     await save(page);
 
-    await page.goto(ALPHA_SITE);
-    const accent = await page
-      .locator("[style*='--color-accent']")
-      .first()
-      .evaluate((el) => getComputedStyle(el).getPropertyValue("--color-accent"));
-    expect(accent.trim()).toBe("#7b1020");
-
-    await restoreSeedTheme(page, tenantId);
+    expect(await siteToken(page, sandbox.site, "--color-accent")).toBe(
+      "#7b1020",
+    );
   });
 
   /*
@@ -278,30 +302,25 @@ test.describe("operator colour controls", () => {
    */
   test("stores only the tokens the operator actually changed", async ({
     page,
+    sandbox,
   }) => {
-    const tenantId = await signIn(page, OPERATOR);
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openThemeAsOperator(page, sandbox);
 
     const reset = page.getByRole("button", {
       name: /reset colours to the palette/i,
     });
-
-    // A fresh seeded tenant has no overrides at all.
-    await expect(reset).toHaveCount(0);
 
     // Changing one colour creates exactly one override.
     await setColour(page, "accent", "#7b1020");
     await expect(reset).toBeVisible();
     await save(page);
 
-    // Saving an untouched palette must not materialise the other six.
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    // Clearing it must leave nothing behind, not seven redundant tokens.
+    await openThemeAsOperator(page, sandbox);
     await reset.click();
     await save(page);
 
-    await page.goto(`${ADMIN}/${tenantId}/theme`, { waitUntil: "networkidle" });
+    await openThemeAsOperator(page, sandbox);
     await expect(reset).toHaveCount(0);
-
-    await restoreSeedTheme(page, tenantId);
   });
 });

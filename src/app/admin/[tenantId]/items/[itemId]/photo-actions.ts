@@ -13,6 +13,8 @@ const uuid = z.string().uuid();
 export interface PhotoFormState {
   error: string | null;
   saved?: boolean;
+  /** Distinguished from `saved` so the confirmation can say what happened. */
+  removed?: boolean;
 }
 
 /**
@@ -45,7 +47,7 @@ export async function uploadItemPhoto(
 
     revalidatePath(`/${membership.tenantId}`);
     revalidatePath(`/${membership.tenantId}/items/${itemId}`);
-    return { error: null, saved: true };
+    return { error: null, removed: true };
   }
 
   const file = formData.get("photo");

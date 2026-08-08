@@ -16,6 +16,8 @@ import { storeUpload } from "@/server/media";
 export interface ThemeFormState {
   error: string | null;
   saved?: boolean;
+  /** Distinguished from `saved` so the confirmation can say what happened. */
+  removed?: boolean;
 }
 
 const paletteIds = Object.keys(PALETTES) as [PaletteId, ...PaletteId[]];
@@ -50,7 +52,7 @@ export async function updateLogo(
       createThemeRepository(session).setLogo(null),
     );
     revalidatePath(`/${membership.tenantId}/theme`);
-    return { error: null, saved: true };
+    return { error: null, removed: true };
   }
 
   const file = formData.get("logo");

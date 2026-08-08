@@ -1,17 +1,24 @@
 import { expect, test } from "@playwright/test";
+import { site } from "./support/urls";
 
 /**
  * Per-tenant theming.
  *
- * Requires the seed: Alpha Grill carries an explicit crimson/modern/grid theme,
- * Beta Bistro deliberately carries no theme row at all.
+ * READ-ONLY, deliberately. This spec asserts against the seeded demo tenants --
+ * Alpha Grill carries an explicit crimson/modern/grid theme, Beta Bistro
+ * carries no theme row at all -- and never writes to either. That is what lets
+ * it run in parallel across both projects while the admin specs, which do
+ * write, provision a tenant of their own via the sandbox fixture.
+ *
+ * If anything here ever needs to change a theme, it belongs in
+ * admin-theme.spec.ts with the sandbox, not here.
  *
  * Chromium maps any *.localhost to loopback, which is why these hostnames work
  * with no hosts-file editing. Node and Playwright's `request` fixture do NOT --
  * they use the OS resolver -- so this suite drives the browser throughout.
  */
-const ALPHA = "http://alpha-grill.localhost:3000";
-const BETA = "http://beta-bistro.localhost:3000";
+const ALPHA = site("alpha-grill.localhost");
+const BETA = site("beta-bistro.localhost");
 
 /** The element carrying the tenant's theme tokens. */
 const themeWrapper = "[style*='--color-accent']";

@@ -51,6 +51,14 @@ npm run test:e2e     # Playwright (chromium + mobile)
 npm run build
 ```
 
+The browser suite reuses a server already listening on its port — including a
+`npm run dev` running another branch, which it will then report as a pass. Give
+it its own server:
+
+```bash
+E2E_PORT=3100 npm run test:e2e
+```
+
 Run a single test file: `npx vitest run src/core/storage/types.test.ts`
 Run one e2e test: `npx playwright test -g "serves the home page"`
 
@@ -122,7 +130,11 @@ Migrations run as the owner (`MIGRATION_DATABASE_URL`); the app only ever uses `
 - **Never `redirect()` from a Server Action in the admin.** The admin is reached by rewriting the `app.<platform>` host onto `/admin`; `redirect()` does a *client-side* navigation that resolves the path against the app's own route tree and lands on the platform home page. Return a target and call `window.location.assign()` so a real request goes through the proxy.
 - **Every admin Server Action calls `requireMembership` itself.** A layout guard does not run when an action is invoked directly, and `tenantId` arrives from the client.
 - **`memberships` and `domains` are deliberately outside RLS** — both are read *before* a tenant context exists. See migration `0003`. Everything else carrying `tenant_id` must have a policy, and a test enforces that.
-- **Admin e2e tests run serially** (`test.describe.configure({ mode: "serial" })`): they mutate one shared database, and in parallel they fail on each other's writes. Note this only serializes *within* a Playwright project — `chromium` and `mobile` still run concurrently locally and can collide, so use `--workers=1` when a failure looks like a phantom. CI already sets `workers: 1`.
+- **E2E isolation is by DATA, not by ordering.** `test.describe.configure({ mode: "serial" })` orders tests *within one Playwright project*. It cannot reach across projects: `chromium` and `mobile` are two independent runs of the same file, executing at the same time. Any spec that WRITES must take the `sandbox` fixture (`tests/e2e/support/sandbox.ts`), which provisions a tenant, an owner, the platform operator and login identifiers per project *and per parallel slot*, rebuilt each run. The seeded demo tenants stay read-only for the whole suite — `menu.spec`, `tenant-resolution.spec` and `theming.spec` assert against them in parallel. Do not "fix" a recurrence by dropping to `workers: 1`; that hides it and slows the specs that are genuinely parallel-safe.
+- **Login rate limiting is shared state too.** `attemptLogin` counts failures per email over 15 minutes, so an address reused across projects accumulates failures and eventually answers "Too many attempts" to a test asserting on the wrong-password wording. The sandbox gives each project its own owner and its own never-registered address, and clears their attempts when it provisions.
+- **A disappearing control is not confirmation that a write finished.** Buttons rendered `thing && !pending` vanish the instant submission *starts*, so waiting on their absence returns mid-flight and the next assertion races the action's transaction. Wait for the success message, which only renders once the action has returned — and for the same reason, always wait for a sign-in to leave `/login` before navigating on.
+- **Optimistic UI needs a server barrier in tests, not `networkidle`.** The availability toggle flips before its Server Action returns; reloading then can be served on another connection and read the row before the transaction commits. See `actionAcknowledged` in `tests/e2e/admin.spec.ts`.
+- **The browser suite reuses a server already on its port.** With a hardcoded 3000 that silently means testing whatever `npm run dev` is serving — another branch, a stale build — and reporting it as a pass. Use `E2E_PORT=3100 npm run test:e2e` to get a dedicated server.
 - **Theme tokens render as a React inline `style` object, never a `<style>` tag.** Owner-supplied colours reach CSS, and React's escaping is what closes that injection surface; `themeCssVariables` re-validates and emits only known keys as the second layer.
 - **`themeCssVariables` emits `--font-display` / `--font-body`, not the inner `--font-*-family`.** `globals.css` declares `--font-display: var(--font-display-family)` on `:root`, so that substitution is baked at `:root` and inherits down already-resolved — overriding the inner variable further down the tree silently does nothing.
 - **`next/font` cannot pick a family at runtime**, so every display face is declared in the root layout and the theme chooses one by variable. They carry `preload: false`; the default preloads all of them, which fetched four families on every page load.
