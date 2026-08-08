@@ -48,6 +48,9 @@ function pgErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
+/** The only tenants this file creates, and therefore the only ones it may remove. */
+const ISOLATION_SLUGS = ["alpha-grill", "beta-bistro"];
+
 /** Unprivileged runtime role -- the one real requests use. */
 let db: Database;
 let appPool: Pool;
@@ -71,7 +74,19 @@ beforeAll(async () => {
   }));
   adminPool = new Pool({ connectionString: adminUrl, max: 2 });
 
-  await adminPool.query("TRUNCATE TABLE tenants CASCADE");
+  /*
+   * Scoped to this file's own tenants, deliberately NOT a TRUNCATE.
+   *
+   * Vitest runs test files concurrently. A truncate here would delete the
+   * fixtures of any other database-backed file running at the same time --
+   * tests/integration/menu-repository.test.ts, for one -- and the resulting
+   * failure reads exactly like a tenant-isolation bug while being nothing of
+   * the sort. Cleaning up only what this file created is enough: every
+   * assertion below is scoped to tenantA or tenantB anyway.
+   */
+  await adminPool.query("DELETE FROM tenants WHERE slug = ANY($1::text[])", [
+    ISOLATION_SLUGS,
+  ]);
 
   const seeded = await adminPool.query<{ id: string }>(
     `INSERT INTO tenants (slug, name, currency, timezone)
@@ -100,7 +115,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await adminPool.query("TRUNCATE TABLE tenants CASCADE");
+  await adminPool.query("DELETE FROM tenants WHERE slug = ANY($1::text[])", [
+    ISOLATION_SLUGS,
+  ]);
   await Promise.all([appPool.end(), adminPool.end()]);
 });
 
@@ -204,6 +221,88 @@ describe("row-level security (isolation layer 2, repository bypassed)", () => {
     const value = rows.rows[0]?.value;
 
     expect(value === null || value === "").toBe(true);
+  });
+});
+
+describe("menu deletion (isolation)", () => {
+  /** A category with one dish, owned by `tenantId`. */
+  async function seedSection(tenantId: string, label: string) {
+    return withTenant(db, tenantId, async (session) => {
+      const repo = createMenuRepository(session);
+      const category = await repo.createCategory({
+        nameEn: `${label} Section`,
+      });
+      const item = await repo.createItem({
+        categoryId: category.id,
+        nameEn: `${label} Dish`,
+        basePriceMinor: 500,
+      });
+      return { categoryId: category.id, itemId: item.id };
+    });
+  }
+
+  it("cannot delete another restaurant's category, and its dishes survive", async () => {
+    const beta = await seedSection(tenantB, "Beta Delete");
+
+    const attempt = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).deleteCategory(beta.categoryId),
+    );
+    expect(attempt).toBeNull();
+
+    const dish = await withTenant(db, tenantB, (session) =>
+      createMenuRepository(session).findItem(beta.itemId),
+    );
+    expect(dish?.nameEn).toBe("Beta Delete Dish");
+  });
+
+  it("counts zero dishes in a category it cannot see", async () => {
+    const beta = await seedSection(tenantB, "Beta Count");
+
+    const seen = await withTenant(db, tenantA, (session) =>
+      createMenuRepository(session).countItemsInCategory(beta.categoryId),
+    );
+    // Not "1 but you may not have it" -- from A's side the category does not
+    // exist at all, and the count has to agree with that.
+    expect(seen).toBe(0);
+  });
+
+  /*
+   * RLS on its own, repository bypassed. Delete is the operation where a
+   * missing policy is most expensive: a leak on SELECT shows someone data, a
+   * leak on DELETE destroys it.
+   */
+  it("blocks a raw cross-tenant DELETE (RLS alone)", async () => {
+    const beta = await seedSection(tenantB, "Beta Raw");
+
+    const deleted = await withTenant(db, tenantA, (session) =>
+      session.tx.execute(
+        sql`DELETE FROM categories WHERE id = ${beta.categoryId}::uuid`,
+      ),
+    );
+    // No WHERE on tenant_id at all. The policy's USING clause is the only
+    // thing standing between A and B's menu, so it must match no rows.
+    expect(deleted.rowCount ?? 0).toBe(0);
+
+    const survivor = await withTenant(db, tenantB, (session) =>
+      createMenuRepository(session).findCategory(beta.categoryId),
+    );
+    expect(survivor).not.toBeNull();
+  });
+
+  it("blocks a raw cross-tenant reorder (RLS alone)", async () => {
+    const beta = await seedSection(tenantB, "Beta Sort");
+
+    const updated = await withTenant(db, tenantA, (session) =>
+      session.tx.execute(
+        sql`UPDATE categories SET sort_order = 99 WHERE id = ${beta.categoryId}::uuid`,
+      ),
+    );
+    expect(updated.rowCount ?? 0).toBe(0);
+
+    const survivor = await withTenant(db, tenantB, (session) =>
+      createMenuRepository(session).findCategory(beta.categoryId),
+    );
+    expect(survivor?.sortOrder).toBe(0);
   });
 });
 
