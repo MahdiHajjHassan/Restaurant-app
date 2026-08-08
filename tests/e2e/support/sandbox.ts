@@ -57,6 +57,23 @@ export interface Sandbox {
   rival: { id: string; dish: string };
 }
 
+/**
+ * A restaurant with no menu at all, for the test that builds one from nothing.
+ *
+ * Separate from `Sandbox` rather than an option on it: the writing specs share
+ * that tenant's seeded dishes and would break if it were sometimes empty. This
+ * is a different tenant with a different owner, per project and per parallel
+ * slot -- isolation by data, like everything else in this suite.
+ */
+export interface EmptySandbox {
+  id: string;
+  slug: string;
+  name: string;
+  site: string;
+  owner: string;
+  password: string;
+}
+
 /** Only appears if the admin's authorization check has failed. */
 const RIVAL_DISH = "Manakish Zaatar";
 
@@ -322,17 +339,134 @@ async function provision(
   }
 }
 
+async function provisionEmpty(
+  projectName: string,
+  parallelIndex: number,
+): Promise<EmptySandbox> {
+  const connectionString = process.env.MIGRATION_DATABASE_URL;
+  if (!connectionString) {
+    throw new Error(
+      "MIGRATION_DATABASE_URL must be set: the browser suite provisions a " +
+        "tenant per project, which is an operator-role action. Copy " +
+        ".env.example to .env.local and fill it in.",
+    );
+  }
+
+  const slug = `${slugFor(projectName, parallelIndex)}-empty`;
+  const name = `E2E ${projectName} ${parallelIndex} empty`;
+  const owner = `owner@${slug}.test`;
+  const pool = new Pool({ connectionString, max: 1 });
+  const client = await pool.connect();
+
+  try {
+    // Sequential awaits throughout: a transaction is pinned to one connection.
+    await client.query("BEGIN");
+
+    const tenantId = await upsertTenant(client, slug, name);
+
+    await client.query(
+      `INSERT INTO domains (tenant_id, hostname, is_primary, verified_at)
+       VALUES ($1, $2, true, now())
+       ON CONFLICT (hostname) DO UPDATE
+         SET tenant_id = EXCLUDED.tenant_id, verified_at = now()`,
+      [tenantId, `${slug}.localhost`],
+    );
+
+    // Genuinely empty, every run. The test's whole claim is that an owner can
+    // start from nothing, so starting from the previous run's leftovers would
+    // quietly stop testing that. Deleting categories cascades to items.
+    await client.query("DELETE FROM categories WHERE tenant_id = $1", [
+      tenantId,
+    ]);
+    await client.query("DELETE FROM media WHERE tenant_id = $1", [tenantId]);
+
+    // A known theme, so the public assertions do not depend on whatever a
+    // previous run happened to leave behind.
+    await client.query(
+      `INSERT INTO theme_settings (tenant_id, palette_id, font_pair, preset, palette, logo_id)
+       VALUES ($1, 'paper', 'classic', 'list', '{}'::jsonb, NULL)
+       ON CONFLICT (tenant_id) DO UPDATE
+         SET palette_id = EXCLUDED.palette_id,
+             font_pair  = EXCLUDED.font_pair,
+             preset     = EXCLUDED.preset,
+             palette    = EXCLUDED.palette,
+             logo_id    = EXCLUDED.logo_id`,
+      [tenantId],
+    );
+
+    const passwordHash = await hashPassword(SANDBOX_PASSWORD);
+    const user = await client.query<{ id: string }>(
+      `INSERT INTO users (email, name, password_hash)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
+       RETURNING id`,
+      [owner, slug, passwordHash],
+    );
+    const userId = user.rows[0]?.id;
+    if (!userId) throw new Error(`Upsert returned no user row for ${owner}`);
+
+    await client.query(
+      `INSERT INTO memberships (tenant_id, user_id, role)
+       VALUES ($1, $2, 'owner')
+       ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = 'owner'`,
+      [tenantId, userId],
+    );
+    // Exactly one membership, so signing in redirects straight to the tenant.
+    await client.query(
+      "DELETE FROM memberships WHERE user_id = $1 AND tenant_id <> $2",
+      [userId, tenantId],
+    );
+
+    // Failures from earlier runs are still inside the limiter's 15-minute
+    // window and would answer "too many attempts" to a test asserting on
+    // something else entirely.
+    await client.query("DELETE FROM login_attempts WHERE identifier = $1", [
+      owner,
+    ]);
+
+    await client.query("COMMIT");
+
+    return {
+      id: tenantId,
+      slug,
+      name,
+      site: site(`${slug}.localhost`),
+      owner,
+      password: SANDBOX_PASSWORD,
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+    await pool.end();
+  }
+}
+
 /**
  * Worker-scoped: provisioning happens once per worker that actually runs a
- * writing spec, not once per test.
+ * writing spec, not once per test. `emptySandbox` is only built by a worker
+ * that asks for it, so the specs using the seeded sandbox pay nothing for it.
  */
-export const test = base.extend<object, { sandbox: Sandbox }>({
+export const test = base.extend<
+  object,
+  { sandbox: Sandbox; emptySandbox: EmptySandbox }
+>({
   sandbox: [
     // The empty pattern is required: Playwright reads the destructured names
     // to work out fixture dependencies, and rejects a plain parameter.
     async ({}, use, workerInfo) => {
       await use(
         await provision(workerInfo.project.name, workerInfo.parallelIndex),
+      );
+    },
+    { scope: "worker" },
+  ],
+
+  emptySandbox: [
+    async ({}, use, workerInfo) => {
+      await use(
+        await provisionEmpty(workerInfo.project.name, workerInfo.parallelIndex),
       );
     },
     { scope: "worker" },

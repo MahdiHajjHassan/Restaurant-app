@@ -172,7 +172,10 @@ test.describe("menu management", () => {
     await signIn(page, sandbox.owner, sandbox.password);
     await page.getByRole("link", { name: /Fattoush/ }).click();
 
-    await page.getByLabel("Price (USD)").fill("9.25");
+    // `exact`, because getByLabel substring-matches: the sizes section further
+    // down the page labels its own field "New size price (USD)", which contains
+    // this one. A loose selector here breaks every time the page gains a field.
+    await page.getByLabel("Price (USD)", { exact: true }).fill("9.25");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("status")).toContainText("Saved");
 
@@ -182,7 +185,7 @@ test.describe("menu management", () => {
     // Restore.
     await page.goto(ADMIN);
     await page.getByRole("link", { name: /Fattoush/ }).click();
-    await page.getByLabel("Price (USD)").fill("8");
+    await page.getByLabel("Price (USD)", { exact: true }).fill("8");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("status")).toContainText("Saved");
   });
