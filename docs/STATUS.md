@@ -1,7 +1,8 @@
 # Status — read this first
 
-**Last updated:** 9 August 2026, after the mobile performance budget was
-measured at a realistic 90-dish menu and brought to 97.
+**Last updated:** 9 August 2026, after the console was given its own design
+language and the mobile performance budget was measured at a realistic 90-dish
+menu.
 
 If you are a new session picking this up, this file orients you in about two
 minutes. Then read `CLAUDE.md` for the conventions that carry real consequences,
@@ -107,6 +108,43 @@ client has asked for bespoke styling, and it would create a surface the Phase 6
 nonce-based CSP then has to be designed around. Adding the screen later is a
 textarea and an action.
 
+### The console has its own design language
+
+Everything under `/admin` used to be built from the menu's tokens — warm paper,
+muted ink, hairline rules. Those exist to make a customer feel they are reading
+a printed page, and they were wrong for a tool: status was invisible, headings
+were barely larger than body text, nothing looked clickable.
+
+The console now carries a `console` class scoping a `--c-*` token set defined in
+`globals.css`, and it is deliberately **cool** where the rest of the product is
+warm. An operator can impersonate an owner, so "am I looking at a customer's
+site or at the machinery behind it" has to be answerable at a glance.
+
+**Reach for `src/ui/console/` before hand-styling anything**: `Button`, `Panel`,
+`Field`, `StatusBadge`, `PageHeader`, `EmptyState`. A new screen should be
+composed from those, not built from raw Tailwind — that is what stops the
+console drifting back into a dozen slightly different input styles.
+
+The signature is the **status spine**: a coloured leading edge on anything that
+carries state. Green live, amber trial, red suspended on a restaurant row;
+muted on a hidden menu section. It answers the thing that was actually broken.
+
+Three rules that will bite:
+
+- **Console tokens are `--c-*`, never `--color-*`.** `admin-theme.spec` finds
+  the theme editor's preview by `[style*='--color-accent']`, taking the LAST
+  match. A console element with an inline style naming that variable captures
+  the selector.
+- **The theme preview keeps the menu's tokens.** It renders the tenant's
+  palette, not console chrome.
+- **Presentation only — never text, labels, roles or ARIA.** 126 browser tests
+  find elements by accessible name and role. Swapping `EmptyState`'s heading for
+  styled text broke a test in exactly this way.
+
+Console fonts stay on console pages: `IBM Plex Mono` (identifiers) and the 600
+weight both carry `preload: false` and render nowhere on a public menu. Verified
+after the redesign — the customer-facing pages still fetch 3 files, 61 KB.
+
 ### The mobile performance budget, measured
 
 The roadmap targets Lighthouse ≥95 on mobile. It had never been tested above 5
@@ -115,11 +153,14 @@ dish — the worst honest case for the flagship grid preset.
 
 | | Score | LCP |
 |---|---|---|
+| List (the default) | **98** | 2.6 s |
 | Editorial | **98** | 2.2 s |
-| List (the default) | **97** | 2.6 s |
 | Grid, English | **96** | 2.7 s |
 | Grid, Arabic | **96** | 2.7 s |
 | Grid, cold optimizer cache | 88 | 3.9 s |
+
+Re-measured after the console redesign, since the console shares one stylesheet
+with customer pages: unchanged.
 
 **Every preset clears the target, in both languages.** Grid started at 83 and
 list at 90. Four changes got them there, each measured on its own:
