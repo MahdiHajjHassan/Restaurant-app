@@ -444,6 +444,35 @@ async function provisionEmpty(
 }
 
 /**
+ * Removes a restaurant this suite created THROUGH THE CONSOLE, so a second run
+ * does not collide on the unique slug.
+ *
+ * Runs as the migration role for the same reason the rest of this file does:
+ * creating and destroying a restaurant is an operator action, and the app role
+ * deliberately cannot write outside a tenant context.
+ */
+export async function dropRestaurant(
+  slug: string,
+  ownerEmail: string,
+): Promise<void> {
+  const connectionString = process.env.MIGRATION_DATABASE_URL;
+  if (!connectionString) throw new Error("MIGRATION_DATABASE_URL must be set");
+
+  const pool = new Pool({ connectionString, max: 1 });
+  try {
+    // Sequential: one connection. Deleting the tenant cascades to its domains,
+    // menu and memberships.
+    await pool.query("DELETE FROM tenants WHERE slug = $1", [slug]);
+    await pool.query("DELETE FROM users WHERE email = $1", [ownerEmail]);
+    await pool.query("DELETE FROM login_attempts WHERE identifier = $1", [
+      ownerEmail,
+    ]);
+  } finally {
+    await pool.end();
+  }
+}
+
+/**
  * Worker-scoped: provisioning happens once per worker that actually runs a
  * writing spec, not once per test. `emptySandbox` is only built by a worker
  * that asks for it, so the specs using the seeded sandbox pay nothing for it.

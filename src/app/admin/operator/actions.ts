@@ -272,9 +272,12 @@ export async function startImpersonating(
   return { error: null, saved: true, target: `/${id}` };
 }
 
-export async function stopImpersonating(): Promise<OperatorActionState> {
-  // Deliberately NOT behind requirePlatformAdmin: stopping is always safe, and
-  // gating it would strand anyone whose admin flag was removed mid-session.
-  (await cookies()).delete(IMPERSONATION_COOKIE);
-  return { error: null, saved: true, target: "/operator" };
-}
+/*
+ * There is deliberately no stopImpersonating action here.
+ *
+ * Clearing the cookie removes access to the page the caller is standing on,
+ * and a Server Action re-renders that page as part of its response -- so the
+ * re-render would redirect at the same moment the client tried to navigate,
+ * and the two would race. Leaving is a route handler instead: see
+ * operator/leave/route.ts.
+ */
