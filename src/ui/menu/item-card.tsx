@@ -95,12 +95,18 @@ export function ItemCard({
             placeholder={item.image.blurDataUrl ? "blur" : "empty"}
             blurDataURL={item.image.blurDataUrl ?? undefined}
             /*
-             * `priority` is next/image's combination of eager loading, high
-             * fetch priority and a preload link, and it is reserved for the
-             * first row. Handing it to every visible card would put six
+             * `priority` emits the <link rel="preload">, and it is reserved for
+             * the first row: handing it to every visible card would put six
              * preloads in front of the one paint the score is measured on.
+             *
+             * fetchPriority is set explicitly rather than left to `priority`.
+             * Next 16 emits neither fetchpriority="high" on the img nor on the
+             * preload link, and Lighthouse's LCP-discovery check wants all
+             * three -- eager, discoverable, AND high priority -- so it kept
+             * scoring zero on a page that already had the first two.
              */
             priority={fetch === "lcp"}
+            fetchPriority={fetch === "lcp" ? "high" : undefined}
             loading={fetch === "lazy" ? "lazy" : "eager"}
             className="object-cover"
           />

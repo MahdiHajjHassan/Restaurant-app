@@ -17,7 +17,7 @@
  */
 import lighthouse from "lighthouse";
 import * as chromeLauncher from "chrome-launcher";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 
 const url = process.argv[2];
 if (!url || url.startsWith("--")) {
@@ -34,6 +34,17 @@ const flag = (name, fallback) =>
 const runs = Number(flag("runs", 3));
 const label = flag("label", "run");
 
+/*
+ * --cold clears the Next image-optimizer cache before EVERY run, not once
+ * before the batch.
+ *
+ * Clearing it once makes run 1 cold and runs 2 and 3 warm, so the median is a
+ * warm number wearing a cold label. That is not a hypothetical: the font fix
+ * measured 87, 97, 97 that way, and the 87 was the only honest cold reading in
+ * the set.
+ */
+const cold = process.argv.includes("--cold");
+
 const chrome = await chromeLauncher.launch({
   chromeFlags: ["--headless=new", "--no-sandbox"],
 });
@@ -41,6 +52,7 @@ const chrome = await chromeLauncher.launch({
 const results = [];
 try {
   for (let i = 0; i < runs; i += 1) {
+    if (cold) await rm(".next/cache/images", { recursive: true, force: true });
     const started = Date.now();
     const { lhr } = await lighthouse(url, {
       port: chrome.port,
@@ -66,7 +78,7 @@ const medianRun = results[scores.indexOf(median)];
 
 const metric = (id) => medianRun.audits[id]?.displayValue ?? "n/a";
 
-console.log(`\n=== ${label} ===`);
+console.log(`\n=== ${label} (${cold ? "COLD, cache cleared each run" : "warm"}) ===`);
 console.log(`scores: ${scores.join(", ")}   MEDIAN: ${median}`);
 console.log(`  FCP         ${metric("first-contentful-paint")}`);
 console.log(`  LCP         ${metric("largest-contentful-paint")}`);

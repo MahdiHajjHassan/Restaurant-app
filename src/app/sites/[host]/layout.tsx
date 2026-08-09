@@ -25,7 +25,12 @@ export default async function SiteLayout({
   if (!isServable(tenant)) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-3 px-6 py-16 text-center">
-        <h1 className="text-2xl font-semibold">{tenant.name}</h1>
+        {/*
+          font-medium, not font-semibold: weight 600 was the ONLY 600 in the
+          product, and declaring it made every menu visitor download two more
+          font files for a page almost nobody reaches.
+        */}
+        <h1 className="text-2xl font-medium">{tenant.name}</h1>
         <p className="text-[var(--color-muted)]">
           This site is temporarily unavailable. If you are the owner, please get
           in touch to restore it.

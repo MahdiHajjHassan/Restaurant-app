@@ -1,0 +1,60 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "grid-90-fonts-warm",
+  "measuredAt": "2026-08-09T12:35:31.827Z",
+  "scores": [
+    86,
+    97,
+    97
+  ],
+  "median": 97,
+  "metrics": {
+    "fcp": "1.5 s",
+    "lcp": "2.5 s",
+    "tbt": "20 ms",
+    "cls": "0",
+    "speedIndex": "1.5 s"
+  },
+  "failing": [
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.85,
+      "displayValue": "4.2 s",
+      "savingsMs": null
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 0
+    },
+    {
+      "id": "forced-reflow-insight",
+      "title": "Forced reflow",
+      "score": 0,
+      "savingsMs": null
+    },
+    {
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0,
+      "displayValue": "Est savings of 40 ms",
+      "savingsMs": null
+    }
+  ]
+}

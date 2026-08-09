@@ -1,0 +1,49 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "grid-90-inlinecss-warm",
+  "measuredAt": "2026-08-09T12:41:11.852Z",
+  "scores": [
+    86,
+    97,
+    97,
+    97,
+    97
+  ],
+  "median": 97,
+  "metrics": {
+    "fcp": "1.5 s",
+    "lcp": "2.4 s",
+    "tbt": "20 ms",
+    "cls": "0",
+    "speedIndex": "1.5 s"
+  },
+  "failing": [
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.87,
+      "displayValue": "4.1 s",
+      "savingsMs": null
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 0
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "network-dependency-tree-insight",
+      "title": "Network dependency tree",
+      "score": 0,
+      "savingsMs": null
+    }
+  ]
+}

@@ -52,14 +52,28 @@ const tajawal = Tajawal({
  * the page. Held constant across every pairing for exactly that reason -- the
  * display face is what varies between themes.
  *
- * This one keeps the default preload: every theme uses it and it carries the
- * body text, so it is on the critical path for every tenant.
+ * Two weights, not three. 600 was declared and used exactly once, on the
+ * suspended-site notice, which costs every menu visitor two font files for a
+ * page almost nobody reaches.
+ *
+ * `preload: false` here too, and this one was measured rather than assumed.
+ * next/font preloads every declared subset, so an English menu was fetching
+ * the Arabic subset as a <link rel="preload"> -- competing directly with the
+ * LCP image on a throttled connection, which is the one request the score
+ * turns on. `display: "swap"` means text still paints immediately in the
+ * fallback face; dropping the preload moves the font behind the photo instead
+ * of in front of it.
+ *
+ * Re-verify in the network panel after touching this block. The claim above it
+ * was true when written and had quietly stopped being true: seven woff2 files,
+ * 183 KB, were arriving on a page that renders two faces.
  */
 const plexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["latin", "arabic"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   variable: "--font-plex-arabic",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
