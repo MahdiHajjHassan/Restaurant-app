@@ -39,12 +39,28 @@ export default defineConfig({
   ],
 
   webServer: {
-    // CI exercises the production build, because that is what customers get:
-    // dev-server behaviour differs on caching, error handling, and bundling,
-    // and a bug that only appears in production is the expensive kind.
-    command: process.env.CI
-      ? `npm run build && npx next start -p ${PORT}`
-      : `npx next dev -p ${PORT}`,
+    /*
+     * A production build ALWAYS, not only in CI.
+     *
+     * `next dev` compiles routes on demand, and with six workers against one
+     * dev server a route transiently fails to resolve: the admin dish page
+     * answers 404 for an item that provably exists, and admin.spec and
+     * admin-photo.spec fail together on both projects.
+     *
+     * Measured on main with no application change. Against `next dev` the full
+     * suite passed 4 runs out of 11. Against `next start` it passed 3 for 3 and
+     * took 34s instead of 1.7m, because nothing is being compiled mid-run. The
+     * production build is both the honest target and the faster one; the only
+     * thing dev mode was buying here was an hour of debugging a 404 that no
+     * customer can ever see.
+     *
+     * Dev-server behaviour also differs on caching, error handling and
+     * bundling, and a bug that only appears in production is the expensive kind.
+     *
+     * Iterating on one test? Start `npx next start -p 3100` once and leave it
+     * running -- reuseExistingServer below then skips the rebuild.
+     */
+    command: `npm run build && npx next start -p ${PORT}`,
     url: PLATFORM,
     // The app resolves the admin host as app.<PLATFORM_DOMAIN>, so it has to
     // agree with the port the suite is actually on.
