@@ -159,7 +159,7 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
         <a
           href={otherLocaleHref}
           hrefLang={locale === "ar" ? "en" : "ar"}
-          className="shrink-0 rounded-full border border-[var(--color-rule)] px-3 py-1 text-[0.8rem] transition-colors hover:border-[var(--color-accent)]"
+          className="locale-switch shrink-0 rounded-full border border-[var(--color-rule)] px-3 py-1 text-[0.8rem] transition-colors hover:border-[var(--color-accent)]"
         >
           {messages.switchLanguage}
         </a>

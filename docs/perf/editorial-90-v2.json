@@ -1,0 +1,62 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "editorial-90-v2",
+  "measuredAt": "2026-08-09T13:40:10.630Z",
+  "scores": [
+    88,
+    98,
+    98,
+    89,
+    98
+  ],
+  "median": 98,
+  "metrics": {
+    "fcp": "1.3 s",
+    "lcp": "2.2 s",
+    "tbt": "20 ms",
+    "cls": "0",
+    "speedIndex": "1.3 s"
+  },
+  "failing": [
+    {
+      "id": "max-potential-fid",
+      "title": "Max Potential First Input Delay",
+      "score": 0.6,
+      "displayValue": "220 ms",
+      "savingsMs": null
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 0
+    },
+    {
+      "id": "forced-reflow-insight",
+      "title": "Forced reflow",
+      "score": 0,
+      "savingsMs": null
+    },
+    {
+      "id": "image-delivery-insight",
+      "title": "Improve image delivery",
+      "score": 0.5,
+      "displayValue": "Est savings of 154 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0.5,
+      "savingsMs": null
+    }
+  ]
+}

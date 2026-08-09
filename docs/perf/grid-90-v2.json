@@ -1,0 +1,59 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "grid-90-v2",
+  "measuredAt": "2026-08-09T13:38:28.895Z",
+  "scores": [
+    88,
+    98,
+    96,
+    95,
+    96,
+    97,
+    96
+  ],
+  "median": 96,
+  "metrics": {
+    "fcp": "1.7 s",
+    "lcp": "2.7 s",
+    "tbt": "20 ms",
+    "cls": "0",
+    "speedIndex": "1.7 s"
+  },
+  "failing": [
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.85,
+      "displayValue": "2.7 s",
+      "savingsMs": null
+    },
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.86,
+      "displayValue": "4.2 s",
+      "savingsMs": null
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 0
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0,
+      "displayValue": "Est savings of 220 ms",
+      "savingsMs": null
+    }
+  ]
+}

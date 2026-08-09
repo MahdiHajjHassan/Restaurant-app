@@ -60,6 +60,26 @@ body {
 }
 
 /*
+ * The language switcher renders in the device's own UI face, not the tenant's.
+ *
+ * It is the one piece of Arabic on an English page -- the word "العربية", which
+ * has to stay in Arabic script to be findable by the people who need it. But a
+ * webfont subset is fetched whenever any character in its unicode-range is
+ * rendered, so those seven characters were pulling the ENTIRE 33 KB Arabic
+ * subset of the body face onto every English page load. Measured: 94 KB of
+ * fonts on an English menu, 33 of them for this link.
+ *
+ * A language toggle is a system affordance rather than menu content, so the
+ * system Arabic face is the honest thing to set it in. The rule in CLAUDE.md
+ * about every pairing carrying a genuine Arabic face is about the menu itself,
+ * which is unaffected: on the Arabic page the body face is already loaded and
+ * this control inherits nothing it would not have had.
+ */
+.locale-switch {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/*
  * The leader rule.
  *
  * A menu's typographic signature is the line carrying your eye from a dish to
