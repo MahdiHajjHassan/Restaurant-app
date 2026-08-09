@@ -16,7 +16,12 @@ import {
   type TenantMembership,
   type User,
 } from "@/core/auth/repository";
+import {
+  IMPERSONATION_COOKIE,
+  mayAdminister,
+} from "@/core/auth/impersonation";
 import { hashPassword, needsRehash, verifyPassword } from "@/core/auth/password";
+import { findRestaurant } from "@/core/platform/repository";
 import {
   generateSessionToken,
   SESSION_COOKIE,
@@ -69,24 +74,91 @@ export async function requireSession(): Promise<CurrentSession> {
 }
 
 /**
+ * The tenant this session is currently acting as, or null.
+ *
+ * The cookie is client-controlled and carries no authority of its own -- it
+ * only names WHICH restaurant. Whether the holder may enter one at all is
+ * decided by `users.is_platform_admin`, read from the session on the server.
+ * See core/auth/impersonation.ts.
+ */
+export async function getImpersonatedTenantId(): Promise<string | null> {
+  return (await cookies()).get(IMPERSONATION_COOKIE)?.value ?? null;
+}
+
+/**
+ * The operator console guard.
+ *
+ * Redirects rather than 403s, for the same reason requireMembership does:
+ * telling a stranger that an operator console exists here is itself a small
+ * leak.
+ */
+export async function requirePlatformAdmin(): Promise<CurrentSession> {
+  const session = await requireSession();
+  if (!session.user.isPlatformAdmin) redirect("/");
+  return session;
+}
+
+/**
  * Authorization for one restaurant.
  *
  * Being signed in is NOT the same as being entitled to this tenant, and
  * conflating the two is exactly how multi-tenant products leak. Every admin
  * action that touches tenant data goes through here first.
+ *
+ * A platform operator may also be here, having deliberately chosen to act as
+ * this restaurant. Being a platform admin is NOT by itself access: without
+ * that choice they get exactly what any other signed-in stranger gets. The
+ * rule itself lives in core/auth/impersonation.ts, where it is enumerated as
+ * a truth table.
  */
 export async function requireMembership(tenantId: string): Promise<{
   user: User;
   membership: TenantMembership;
+  /** True when the caller is an operator acting as this restaurant. */
+  impersonating: boolean;
 }> {
   const session = await requireSession();
+
+  // Sequential, not Promise.all: both are cheap, and one of them is a cookie
+  // read behind an async API rather than real concurrent work.
   const membership = await findMembership(db, session.user.id, tenantId);
+  const impersonatingTenantId = await getImpersonatedTenantId();
+
+  const allowed = mayAdminister({
+    hasMembership: membership !== null,
+    isPlatformAdmin: session.user.isPlatformAdmin,
+    impersonatingTenantId,
+    tenantId,
+  });
 
   // 404 rather than 403: telling an outsider that a tenant id exists is itself
   // a small leak.
-  if (!membership) redirect("/");
+  if (!allowed) redirect("/");
 
-  return { user: session.user, membership };
+  if (membership) {
+    return { user: session.user, membership, impersonating: false };
+  }
+
+  /*
+   * An impersonating operator has no membership row, so one is synthesised
+   * from the tenant itself. It must carry the REAL name and currency: a
+   * placeholder currency would render a client's prices wrong by orders of
+   * magnitude, which is exactly what the money rules exist to prevent.
+   */
+  const restaurant = await findRestaurant(db, tenantId);
+  if (!restaurant) redirect("/");
+
+  return {
+    user: session.user,
+    membership: {
+      tenantId: restaurant.id,
+      tenantName: restaurant.name,
+      tenantSlug: restaurant.slug,
+      currency: restaurant.currency,
+      role: "owner",
+    },
+    impersonating: true,
+  };
 }
 
 export type LoginResult =
