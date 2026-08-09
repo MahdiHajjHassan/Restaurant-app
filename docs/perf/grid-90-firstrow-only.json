@@ -1,0 +1,67 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "grid-90-firstrow-only",
+  "measuredAt": "2026-08-09T10:53:46.882Z",
+  "scores": [
+    81,
+    90,
+    89
+  ],
+  "median": 89,
+  "metrics": {
+    "fcp": "1.5 s",
+    "lcp": "3.7 s",
+    "tbt": "50 ms",
+    "cls": "0",
+    "speedIndex": "1.5 s"
+  },
+  "failing": [
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.59,
+      "displayValue": "3.7 s",
+      "savingsMs": null
+    },
+    {
+      "id": "max-potential-fid",
+      "title": "Max Potential First Input Delay",
+      "score": 0.54,
+      "displayValue": "240 ms",
+      "savingsMs": null
+    },
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.72,
+      "displayValue": "5.3 s",
+      "savingsMs": null
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 0
+    },
+    {
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0.5,
+      "savingsMs": null
+    }
+  ]
+}

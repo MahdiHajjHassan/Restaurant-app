@@ -11,6 +11,22 @@ interface ItemCardProps {
   locale: Locale;
   /** Editorial runs one wide column; grid runs a tighter card. */
   variant: "grid" | "editorial";
+  /**
+   * How this card's photo should be fetched.
+   *
+   * next/image lazy-loads by default, which is right for the eighty-odd dishes
+   * below the fold and wrong for the six above it: measured on a 375px screen,
+   * every photo in the opening viewport was `loading="lazy"` with no preload,
+   * so the largest paint waited on a scroll that had already happened. That
+   * alone held a 90-dish grid at 83.
+   *
+   * - "lcp"    the first row, which is where the largest paint actually lands:
+   *            preloaded and fetched at high priority.
+   * - "eager"  the rest of the opening viewport: fetched immediately, but at
+   *            normal priority so it does not compete with the LCP image.
+   * - "lazy"   everything below the fold, which is most of the menu.
+   */
+  fetch?: "lcp" | "eager" | "lazy";
 }
 
 /**
@@ -25,7 +41,13 @@ interface ItemCardProps {
  * Carries the same data-item / data-search attributes as ItemRow so the
  * existing client-side search keeps working across every preset.
  */
-export function ItemCard({ item, currency, locale, variant }: ItemCardProps) {
+export function ItemCard({
+  item,
+  currency,
+  locale,
+  variant,
+  fetch = "lazy",
+}: ItemCardProps) {
   const messages = getMessages(locale);
   const name = localized(item.nameEn, item.nameAr, locale);
   const description = localizedOptional(
@@ -72,6 +94,14 @@ export function ItemCard({ item, currency, locale, variant }: ItemCardProps) {
             }
             placeholder={item.image.blurDataUrl ? "blur" : "empty"}
             blurDataURL={item.image.blurDataUrl ?? undefined}
+            /*
+             * `priority` is next/image's combination of eager loading, high
+             * fetch priority and a preload link, and it is reserved for the
+             * first row. Handing it to every visible card would put six
+             * preloads in front of the one paint the score is measured on.
+             */
+            priority={fetch === "lcp"}
+            loading={fetch === "lazy" ? "lazy" : "eager"}
             className="object-cover"
           />
         </div>

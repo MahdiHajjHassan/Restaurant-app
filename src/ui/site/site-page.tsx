@@ -51,6 +51,30 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
         ? "mt-3 flex flex-col gap-8"
         : "mt-3 divide-y divide-[var(--color-rule)]";
 
+  /*
+   * Which dish photos are fetched before the browser discovers it needs them.
+   *
+   * Measured on a 375x812 screen: the grid puts six cards in the opening
+   * viewport at two per row, and editorial one wide card. Only the first ROW
+   * is treated as the largest paint -- preloading all six would put five
+   * requests in front of the one the score is actually measured on.
+   *
+   * Only the first section can be above the fold; every later one begins below
+   * a full screen of dishes, so its photos stay lazy. That is what keeps this
+   * cheap on a 90-dish menu: 88 of the 90 photos are still deferred.
+   */
+  const aboveFold = preset === "grid" ? 2 : 1;
+  const firstRow = preset === "grid" ? 2 : 1;
+
+  const fetchStrategy = (
+    categoryIndex: number,
+    itemIndex: number,
+  ): "lcp" | "eager" | "lazy" => {
+    if (categoryIndex > 0) return "lazy";
+    if (itemIndex < firstRow) return "lcp";
+    return itemIndex < aboveFold ? "eager" : "lazy";
+  };
+
   const schema = buildRestaurantSchema({
     name: tenant.name,
     url,
@@ -157,7 +181,7 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
           />
 
           <main className="pt-2">
-            {data.menu.map((category) => (
+            {data.menu.map((category, categoryIndex) => (
               <section
                 key={category.id}
                 id={`category-${category.id}`}
@@ -168,7 +192,7 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
                   {localized(category.nameEn, category.nameAr, locale)}
                 </h2>
                 <ul className={itemListClassName} data-preset={preset}>
-                  {category.items.map((item) =>
+                  {category.items.map((item, itemIndex) =>
                     preset === "list" ? (
                       <ItemRow
                         key={item.id}
@@ -183,6 +207,7 @@ export function SitePage({ tenant, data, locale, url }: SitePageProps) {
                         currency={tenant.currency}
                         locale={locale}
                         variant={preset === "grid" ? "grid" : "editorial"}
+                        fetch={fetchStrategy(categoryIndex, itemIndex)}
                       />
                     ),
                   )}
