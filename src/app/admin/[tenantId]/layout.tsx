@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireMembership } from "@/server/auth";
 import { SignOutButton } from "../sign-out-button";
+import { ImpersonationBanner } from "./impersonation-banner";
 
 export default async function TenantAdminLayout({
   children,
@@ -12,10 +13,14 @@ export default async function TenantAdminLayout({
   const { tenantId } = await params;
   // Guards every page beneath this route. Individual Server Actions repeat the
   // check, because an action can be invoked without this layout ever running.
-  const { membership } = await requireMembership(tenantId);
+  const { membership, impersonating } = await requireMembership(tenantId);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-5 pb-16">
+      {impersonating ? (
+        <ImpersonationBanner restaurantName={membership.tenantName} />
+      ) : null}
+
       <header className="flex items-center justify-between gap-4 border-b border-[var(--color-rule)] py-4">
         <div className="min-w-0">
           <p className="truncate font-display text-lg">

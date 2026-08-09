@@ -3,9 +3,14 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/server/auth";
 
 export default async function AdminHome() {
-  const { memberships } = await requireSession();
+  const { user, memberships } = await requireSession();
 
   if (memberships.length === 0) {
+    // A platform operator legitimately has no memberships. Sending them to a
+    // dead end that says "ask whoever set this up" -- when that is them -- is
+    // the kind of small wrongness that makes a product feel unfinished.
+    if (user.isPlatformAdmin) redirect("/operator");
+
     return (
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-3 px-6 py-16 text-center">
         <h1 className="font-display text-xl">No restaurant yet</h1>
@@ -26,6 +31,15 @@ export default async function AdminHome() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 px-6 py-16">
       <h1 className="font-display text-xl">Choose a restaurant</h1>
+
+      {user.isPlatformAdmin ? (
+        <Link
+          href="/operator"
+          className="text-[0.8rem] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+        >
+          Platform console →
+        </Link>
+      ) : null}
       <ul className="flex flex-col gap-px overflow-hidden rounded-lg border border-[var(--color-rule)] bg-[var(--color-rule)]">
         {memberships.map((membership) => (
           <li key={membership.tenantId}>
