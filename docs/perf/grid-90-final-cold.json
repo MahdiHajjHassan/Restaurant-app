@@ -1,0 +1,64 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "grid-90-final-cold",
+  "measuredAt": "2026-08-09T12:56:24.347Z",
+  "scores": [
+    86,
+    89,
+    88,
+    88,
+    88
+  ],
+  "median": 88,
+  "metrics": {
+    "fcp": "1.6 s",
+    "lcp": "3.9 s",
+    "tbt": "40 ms",
+    "cls": "0",
+    "speedIndex": "1.6 s"
+  },
+  "failing": [
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 150
+    },
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.53,
+      "displayValue": "3.9 s",
+      "savingsMs": null
+    },
+    {
+      "id": "max-potential-fid",
+      "title": "Max Potential First Input Delay",
+      "score": 0.47,
+      "displayValue": "260 ms",
+      "savingsMs": null
+    },
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.81,
+      "displayValue": "4.7 s",
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0,
+      "displayValue": "Est savings of 50 ms",
+      "savingsMs": null
+    }
+  ]
+}

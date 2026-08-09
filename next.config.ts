@@ -15,23 +15,23 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "10mb" },
 
     /*
-     * Inline the stylesheet instead of linking it.
+     * DO NOT turn on `experimental.inlineCss` here. It was tried and reverted.
      *
-     * The whole product ships one 7.5 KB stylesheet, and as a separate request
-     * it blocks the first paint for a round trip -- expensive on a phone at
-     * 150 ms RTT, which is the connection this menu is read on.
+     * The appeal is real: the product ships one 7.5 KB stylesheet, and as a
+     * separate request it blocks first paint for a round trip -- expensive at
+     * 150 ms RTT. It measured well, taking the 90-dish grid from a noisy 95
+     * (85,97,86,97,95) to a steady 97 (86,97,97,97,97).
      *
-     * This is build-time Tailwind output with no user input in it. Owner-
-     * supplied colours still travel as a React inline `style` object on the
-     * page element, never as CSS text, so the injection surface that decision
-     * closed stays closed.
+     * It also broke the admin dish page. `Price (USD)` never appears, so an
+     * owner cannot edit a price, and `admin.spec` and `admin-photo.spec` both
+     * time out on chromium and mobile. Isolated by flipping this one flag: off
+     * it passes in 9s, on it times out at 30s.
      *
-     * Note for Phase 6: the nonce-based CSP has to cover this <style> tag.
-     * Next applies the request nonce to it when one is present, so the CSP can
-     * stay free of 'unsafe-inline' -- but it is now a thing the policy must
-     * account for rather than one it can ignore.
+     * Two Lighthouse points are not worth breaking the one thing this product
+     * promises -- that an owner changes a price themselves without calling
+     * anyone. Revisit if Next stabilises the flag; the render-blocking
+     * stylesheet is still the largest remaining item in the audit.
      */
-    inlineCss: true,
   },
 };
 
