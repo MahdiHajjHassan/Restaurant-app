@@ -64,11 +64,13 @@ export function DomainList({
             key={domain.id}
             /*
               Verified is the state that decides whether this address serves at
-              all, so it takes the spine. An unverified domain is not an error,
-              it is simply not finished -- hence muted rather than danger.
+              all -- and it is also the normal case, so it keeps the default
+              silver rather than claiming a colour. An unverified domain is not
+              an error, it is simply not finished, so it dims rather than turning
+              red.
             */
             className={`spine ${
-              domain.verified ? "spine-ok" : "spine-muted"
+              domain.verified ? "" : "spine-muted"
             } flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg bg-[var(--c-surface-sunk)] px-3 py-2.5`}
           >
             <span className="identifier min-w-0 flex-1 truncate text-[0.875rem]">
@@ -82,10 +84,15 @@ export function DomainList({
             ) : null}
 
             <span
+              /*
+                The unfinished one is the one worth noticing. Verified is the
+                normal case and stays quiet; "Not verified" carries the warn
+                colour, because it is the address that is not serving yet.
+              */
               className={`shrink-0 text-[0.75rem] font-medium ${
                 domain.verified
-                  ? "text-[var(--c-ok)]"
-                  : "text-[var(--c-text-subtle)]"
+                  ? "text-[var(--c-text-muted)]"
+                  : "text-[var(--c-warn)]"
               }`}
             >
               {domain.verified ? "Verified" : "Not verified"}

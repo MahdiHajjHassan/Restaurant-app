@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
+import Link from "next/link";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 /**
  * The console's one button.
@@ -43,6 +44,13 @@ const SIZES = {
   md: "min-h-11 px-4 py-2.5 text-[0.9rem] gap-2",
 } as const;
 
+const BASE =
+  "inline-flex items-center justify-center rounded-lg border font-medium transition-[background-color,filter] disabled:cursor-not-allowed disabled:opacity-55";
+
+function classesFor(variant: ButtonVariant, size: "sm" | "md", extra: string) {
+  return `${BASE} ${VARIANTS[variant]} ${SIZES[size]} ${extra}`;
+}
+
 export function Button({
   variant = "secondary",
   size = "md",
@@ -57,9 +65,37 @@ export function Button({
     <button
       {...rest}
       disabled={disabled ?? pending}
-      className={`inline-flex items-center justify-center rounded-lg border font-medium transition-[background-color,filter] disabled:cursor-not-allowed disabled:opacity-55 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
+      className={classesFor(variant, size, className)}
     >
       {pending && pendingLabel ? pendingLabel : children}
     </button>
+  );
+}
+
+/**
+ * A link that looks like a button.
+ *
+ * Separate from `Button` rather than a polymorphic `as` prop: navigation and
+ * submission are different things, and conflating them is how a link ends up
+ * inside a form swallowing its submit. This one stays a real anchor, so it
+ * middle-clicks and opens in a new tab like any other link.
+ */
+export function ButtonLink({
+  href,
+  variant = "secondary",
+  size = "md",
+  className = "",
+  children,
+}: {
+  href: string;
+  variant?: ButtonVariant;
+  size?: "sm" | "md";
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link href={href} className={classesFor(variant, size, className)}>
+      {children}
+    </Link>
   );
 }

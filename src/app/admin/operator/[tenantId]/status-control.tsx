@@ -9,11 +9,14 @@ const STATUSES = ["trial", "active", "suspended"] as const;
 /*
  * Each state carries the colour it means everywhere else in the console, so
  * the selected one reads as the status rather than merely as the pressed
- * button.
+ * button -- and "active" therefore carries no colour at all, matching its badge
+ * in the list. A serving restaurant is the normal case, and colour here is
+ * reserved for the states that want an operator's attention.
  */
 const SELECTED: Record<(typeof STATUSES)[number], string> = {
   trial: "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]",
-  active: "border-[var(--c-ok)] bg-[var(--c-ok-soft)] text-[var(--c-ok)]",
+  active:
+    "border-[var(--c-border-strong)] bg-[var(--c-brand-soft)] text-[var(--c-text)]",
   suspended:
     "border-[var(--c-danger)] bg-[var(--c-danger-soft)] text-[var(--c-danger)]",
 };

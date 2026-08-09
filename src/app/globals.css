@@ -98,29 +98,117 @@ body {
  * namespaces apart also guarantees the public menu is untouched.
  */
 .console {
-  --c-bg: #edeff2;
-  --c-surface: #ffffff;
-  --c-surface-sunk: #f4f6f9;
+  /*
+   * Dark, and warm rather than blue-black.
+   *
+   * Two things fall out of it. A customer's menu is light paper, so a dark
+   * console can never be mistaken for one -- which matters most exactly when it
+   * is most dangerous, with an operator impersonating an owner and editing a
+   * live menu. And a warm charcoal, carrying a faint olive undertone rather
+   * than the usual blue, reads as considered instead of as a terminal.
+   *
+   * Not pure black: #000 against off-white text haloes, and every border has to
+   * shout to be seen at all.
+   */
+  --c-bg: #171613;
+  --c-surface: #1f1e1a;
+  --c-surface-sunk: #121110;
 
-  --c-text: #14181d;
-  --c-text-muted: #57616f;
-  --c-text-subtle: #8892a0;
+  --c-text: #f0ede6;
+  --c-text-muted: #a8a296;
+  --c-text-subtle: #8b8578;
 
-  --c-border: #dce1e7;
-  --c-border-strong: #c0c8d2;
+  --c-border: #302e29;
+  /* Brushed silver, the default spine. Deliberate enough to read as an edge,
+     quiet enough that it never competes with a status colour beside it. */
+  --c-spine: #8a8478;
+  /*
+   * #726b5f, not the darker value that looked right by eye. This one draws the
+   * outline of every input and secondary button, and WCAG 1.4.11 asks 3:1 for a
+   * control's boundary against its background -- the obvious choice measured
+   * 1.78:1, which is a border you can see only if you already know it is there.
+   */
+  --c-border-strong: #726b5f;
 
-  --c-brand: #24428f;
-  --c-brand-fg: #ffffff;
-  --c-brand-soft: #e9eef9;
+  /*
+   * The primary action is NEUTRAL, not a colour -- bone on charcoal here, where
+   * a light theme would have used ink on paper. The relationship inverts; the
+   * rule does not.
+   *
+   * Every accent worth having is already spoken for: green means live, amber
+   * means trial, red means suspended. A fourth hue would compete with the three
+   * that carry meaning. Keeping actions neutral leaves status as the only
+   * colour on the screen, which is the entire point -- status being invisible
+   * is what was wrong with this console in the first place.
+   */
+  --c-brand: #f0ede6;
+  --c-brand-fg: #171613;
+  --c-brand-soft: #26241f;
 
-  --c-ok: #0f7a45;
-  --c-ok-soft: #e2f3ea;
-  --c-warn: #8a5a00;
-  --c-warn-soft: #fbf0d9;
-  --c-danger: #b0281f;
-  --c-danger-soft: #fbe9e7;
+  /*
+   * Status, lifted for a dark ground. The light theme's deep green and
+   * terracotta would disappear here, so these are the same signals raised in
+   * value and dropped in saturation, each paired with a dim tint of itself for
+   * badge backgrounds.
+   */
+  --c-ok: #7cc79b;
+  --c-ok-soft: #18291f;
+  --c-warn: #e0ba76;
+  --c-warn-soft: #2c2418;
+  --c-danger: #ef9483;
+  --c-danger-soft: #2f1c19;
 
-  color-scheme: light;
+  /* Native controls, scrollbars and form widgets follow the theme. */
+  color-scheme: dark;
+}
+
+/*
+ * Paint the page itself dark when a console is on it.
+ *
+ * The tokens are scoped to the console element, so <body> keeps the menu's
+ * paper -- invisible until you overscroll on a phone and a band of cream
+ * rubber-bands into view above a charcoal screen. `:has()` reaches the
+ * ancestor without needing a client component to set a class on <body>.
+ */
+html:has(.console),
+body:has(.console) {
+  background-color: #171613;
+}
+
+/*
+ * The console's focus ring.
+ *
+ * The rule further down paints focus in the menu's accent, which is a deep
+ * bay-leaf green -- nearly invisible against charcoal. Keyboard focus has to be
+ * obvious on the surface it actually lands on, so the console overrides it with
+ * its own bone tone.
+ */
+.console :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--c-brand);
+  outline-offset: 2px;
+}
+
+/*
+ * A light plate for owner-supplied artwork.
+ *
+ * A logo is usually dark ink on transparency, drawn to sit on a white menu. On
+ * a charcoal panel it disappears, and the owner concludes the upload failed.
+ * Anything showing a logo back to them puts it on this instead -- which is also
+ * the honest preview, since white is where it will actually live.
+ */
+.artwork-plate {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, #ececec 25%, transparent 25%),
+    linear-gradient(-45deg, #ececec 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ececec 75%),
+    linear-gradient(-45deg, transparent 75%, #ececec 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
 }
 
 /*
@@ -137,7 +225,20 @@ body {
  * `border-inline-start` flips with direction.
  */
 .spine {
-  border-inline-start: 3px solid var(--c-border-strong);
+  border-inline-start: 3px solid var(--c-spine);
+}
+/*
+ * Silver is the DEFAULT, and most spines keep it.
+ *
+ * The first cut painted every visible section and every verified domain green,
+ * which is the normal case for both -- so the screen filled with a colour that
+ * was supposed to mean something, and green stopped meaning anything. Colour is
+ * for what needs attention. Everything working keeps the silver edge.
+ */
+/* Explicit, so a computed `spine-${status}` class name reads as a choice
+   rather than as a rule that happens not to exist. */
+.spine-neutral {
+  border-inline-start-color: var(--c-spine);
 }
 .spine-ok {
   border-inline-start-color: var(--c-ok);
@@ -148,8 +249,10 @@ body {
 .spine-danger {
   border-inline-start-color: var(--c-danger);
 }
+/* Dimmer than silver, not brighter: a hidden section or an unfinished domain
+   is switched OFF, and the edge should look it. */
 .spine-muted {
-  border-inline-start-color: var(--c-border-strong);
+  border-inline-start-color: #45423b;
 }
 
 /*

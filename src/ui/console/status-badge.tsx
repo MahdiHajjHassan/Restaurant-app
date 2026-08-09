@@ -12,19 +12,28 @@
 
 export type TenantStatus = "active" | "trial" | "suspended" | "pending";
 
+/*
+ * Active is deliberately NOT green.
+ *
+ * A working restaurant is the normal case, and in a list where most rows are
+ * working, colouring them all makes the colour report nothing -- the eye stops
+ * seeing it and the two rows that actually need an operator get lost among the
+ * green. Colour is reserved for what needs attention: a trial that will end, a
+ * site that has stopped serving. Everything healthy stays quiet.
+ */
 const TONES: Record<TenantStatus, string> = {
-  active: "bg-[var(--c-ok-soft)] text-[var(--c-ok)]",
+  active: "bg-[var(--c-brand-soft)] text-[var(--c-text-muted)]",
   trial: "bg-[var(--c-warn-soft)] text-[var(--c-warn)]",
   suspended: "bg-[var(--c-danger-soft)] text-[var(--c-danger)]",
   pending: "bg-[var(--c-surface-sunk)] text-[var(--c-text-muted)]",
 };
 
-/** Maps a status onto the spine colour a row or panel should carry. */
+/** Maps a status onto the spine a row or panel should carry. */
 export function spineFor(status: string) {
-  if (status === "active") return "ok" as const;
   if (status === "trial") return "warn" as const;
   if (status === "suspended") return "danger" as const;
-  return "muted" as const;
+  // Active, and anything unrecognised, keeps the default silver edge.
+  return "neutral" as const;
 }
 
 export function StatusBadge({ status }: { status: string }) {

@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
  * pseudo-element so it mirrors under RTL for free.
  */
 
-export type Spine = "ok" | "warn" | "danger" | "muted" | null;
+export type Spine = "neutral" | "ok" | "warn" | "danger" | "muted" | null;
 
 interface PanelProps {
   title?: ReactNode;
@@ -26,6 +26,7 @@ interface PanelProps {
 }
 
 const SPINES: Record<NonNullable<Spine>, string> = {
+  neutral: "spine",
   ok: "spine spine-ok",
   warn: "spine spine-warn",
   danger: "spine spine-danger",

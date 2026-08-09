@@ -52,15 +52,19 @@ export default async function MenuAdminPage({
           return (
             /*
              * One panel per section, with a spine that reports whether the
-             * section is on the site. A hidden section is the owner's choice
-             * rather than a fault, so it is muted rather than red -- but it
-             * must be obvious, because "why isn't this showing" is the support
+             * section is on the site.
+             *
+             * Showing is the normal case and takes the default silver: colour
+             * here would mean a whole menu of green edges, and a colour that
+             * appears everywhere reports nothing. Hidden is the exception, and
+             * it dims -- the owner's choice rather than a fault, so not red,
+             * but unmistakable, because "why isn't this showing" is the support
              * call this screen exists to prevent.
              */
             <section
               key={category.id}
               className={`spine ${
-                category.isVisible ? "spine-ok" : "spine-muted"
+                category.isVisible ? "" : "spine-muted"
               } overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]`}
             >
               <div className="border-b border-[var(--c-border)] px-3 py-2.5 sm:px-4">

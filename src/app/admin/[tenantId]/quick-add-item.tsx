@@ -98,7 +98,7 @@ export function QuickAddItem({
       {state.saved ? (
         <p
           role="status"
-          className="basis-full text-[0.8rem] font-medium text-[var(--c-ok)]"
+          className="basis-full text-[0.8rem] font-medium text-[var(--c-text)]"
         >
           Added to {categoryName}.
         </p>
