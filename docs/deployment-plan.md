@@ -170,7 +170,7 @@ Ordered. Items marked **(A)** apply only to the rented-server route,
 | 11 | Deploy pipeline | Build, run all 356 tests, deploy on green. Never deploy an untested tree |
 | 12 | Uptime monitoring + error tracking | Sentry is Phase 6; something must page us before a client notices |
 | 13 | Security review | Before public exposure, not after |
-| 14 | Lighthouse at realistic menu size | Never tested above 5 dishes. The flagship grid preset loads a photo per dish; the target is ≥95 mobile. See open question 4 |
+| 14 | ~~Lighthouse at realistic menu size~~ | **Done, 9 Aug 2026.** Grid 97 mobile at 90 dishes, both languages. Adds one deploy step: warm the image cache before sending traffic |
 
 ---
 
@@ -183,7 +183,8 @@ Ordered. Items marked **(A)** apply only to the rented-server route,
 | Backup exists but restore has never been run | **High** | Rehearse a full restore into a scratch database before the first client, and again quarterly |
 | Single server dies | **High** on Route A | Documented rebuild procedure + offsite backups. Accepted consciously at this scale; see open question 2 |
 | TLS "ask" endpoint abused to issue certificates | Medium | Answer only for hostnames already in `domains`; rate-limit; Let's Encrypt caps apply per registered domain |
-| Latency from EU datacentre to Lebanon | Medium | ~60–90ms; acceptable, but it eats into a mobile performance budget that has never been measured |
+| Latency from EU datacentre to Lebanon | Low | ~60–90ms. The budget has now been measured and the server answers in 5ms; what the budget is spent on is payload, not round trips |
+| First visitor after a deploy gets a cold image cache | Medium | Measured at 9 Lighthouse points. Warm it as a deploy step; see open question 4 |
 | No password reset exists | Medium | See open question 3 — this is the one I most expect to bite |
 
 ---
@@ -224,11 +225,22 @@ add a "reset this owner's password" action to the console, restricted to
 platform admins and audited; or build the email adapter now. **I would like a
 view on which, before launch rather than after.**
 
-**4. Should the performance budget be measured before or after launch?**
-The roadmap targets ≥95 mobile Lighthouse. It has never been tested above 5
-dishes, and the flagship layout loads an image per dish. A 90-item menu on a
-phone on a poor connection is the actual product context. Measuring first costs
-a day; measuring after risks discovering it in front of a paying client.
+**4. ~~Should the performance budget be measured before or after launch?~~
+ANSWERED — measured before, on 9 August 2026.**
+A 90-dish menu with a photograph on every dish scores **97 on mobile** for the
+grid preset in both languages, against a target of ≥95. It began at 83. The
+list preset — the default — is at 94 and is the one still short. Full numbers
+and how to reproduce them are in `docs/STATUS.md`.
+
+Two findings that change deployment work rather than application code:
+
+- **A cold image cache costs 9 points** (88 against 97). Next resizes on demand
+  and a deploy wipes the cache, so the first visitor pays. `warm-images.mjs`
+  renders the 360 renditions in about 15 seconds and belongs in the deploy
+  script, before traffic is sent. This matters more on the target box than it
+  did here: 4 GB of RAM shared with PostgreSQL, and `sharp` is memory-hungry.
+- **Latency from an EU datacentre is not the constraint the risk table assumed.**
+  The server answers in 5 ms; the budget is spent on payload, not round trips.
 
 **5. Is anything in "constraints" wrong?**
 Each is drawn from code and tests in this repository, cited above. If any is

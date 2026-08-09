@@ -1,6 +1,7 @@
 # Status — read this first
 
-**Last updated:** 9 August 2026, after Phase 5 (operator console) merged to `main`.
+**Last updated:** 9 August 2026, after the mobile performance budget was
+measured at a realistic 90-dish menu and brought to 97.
 
 If you are a new session picking this up, this file orients you in about two
 minutes. Then read `CLAUDE.md` for the conventions that carry real consequences,
@@ -106,6 +107,55 @@ client has asked for bespoke styling, and it would create a surface the Phase 6
 nonce-based CSP then has to be designed around. Adding the screen later is a
 textarea and an action.
 
+### The mobile performance budget, measured
+
+The roadmap targets Lighthouse ≥95 on mobile. It had never been tested above 5
+dishes. It now has been, on a realistic 90-dish menu with a photograph on every
+dish — the worst honest case for the flagship grid preset.
+
+| | Score | LCP |
+|---|---|---|
+| Grid, English | **97** | 2.6 s |
+| Grid, Arabic | **97** | 2.5 s |
+| Editorial | **95** | 2.8 s |
+| List (the default) | **94** | 3.0 s |
+| Grid, cold optimizer cache | 88 | 3.9 s |
+
+Grid started at **83**. Three changes took it to 97, each measured on its own:
+
+1. **The photo that is the largest paint is no longer lazy-loaded.** Every image
+   in the opening viewport was `loading="lazy"` with no preload, so the six a
+   customer sees first were the last ones fetched. Only the FIRST ROW is eager —
+   making all six eager scored *worse* (87 against 89), because they compete
+   with the first paint on a throttled connection.
+2. **The font payload halved.** Seven woff2 files and 183 KB were arriving on a
+   page that renders two typefaces.
+3. **`fetchPriority="high"` set explicitly.** Next 16 emits it nowhere, and
+   Lighthouse wants the LCP image eager *and* discoverable *and* high-priority.
+
+Reproduce it — this needs a production build, so stop any dev server first:
+
+```bash
+npm run perf:seed                      # builds the perf-lab tenant, ~46s
+npm run build && npm run perf:serve    # production, port 3200
+node scripts/perf/warm-images.mjs perf-lab.localhost 3200
+npm run perf:measure http://perf-lab.localhost:3200/ --runs=5 --label=grid
+```
+
+Add `--cold` to clear the image cache before every run. Reports land in
+`docs/perf/`. `perf-lab` is a throwaway tenant, deliberately separate from the
+seeded demo tenants, which the browser suite treats as read-only.
+
+**The fixture is the load-bearing part.** Seeded placeholder photos are 3,132
+bytes each and byte-identical; measuring against those returns a score near 100
+that means nothing. The generator produces 90 distinct photograph-weight images
+(mean 135 KB, 12.2 MB in total) and **refuses to finish** if they drift out of
+that band, because a fixture that quietly goes lightweight turns a green
+measurement into a lie that looks like good news.
+
+Not wired into `npm run verify`: it needs a production build and a browser. A
+CI budget gate belongs to Phase 6.
+
 ## Getting running
 
 ```bash
@@ -189,7 +239,8 @@ In order — each is a prerequisite for the next being worth doing:
    writing terms for a product with no customers, is work done in the dark.
    Once it is live, `attachDomain` becomes a real DNS check.
 2. **Phase 6 — Hardening.** Sentry, structured logs, nonce-based CSP, backups
-   with a *tested* restore, Lighthouse budget in CI.
+   with a *tested* restore, Lighthouse budget in CI. The budget now has a
+   measured baseline and a runner to enforce it against — see above.
 3. **Phase 7 — Commercial.** Privacy policy, terms, Arabic help docs, pricing.
 
 **Password reset is deliberately not on that list.** There is no email adapter at
@@ -200,10 +251,17 @@ clients, not at fifty. Build it when support load says so.
 
 - Seeded dish photos are **generated placeholders**, not photography. Real CC0
   images are a separate step — ask before downloading anything.
-- The Lighthouse target (≥95 mobile on a 90-item menu) has **never been tested**.
-  The seed has 5 dishes. The grid preset loads a photo per dish, which makes this
-  matter more than it did. Quick-add now makes a realistic 90-item menu cheap to
-  build, so this is finally testable.
+- **The list preset scores 94, one point under target, and it is the default.**
+  Its largest paint is a text block, not an image, so none of the image work
+  above touches it. What remains is 27 KB of unused framework JavaScript that
+  cannot go without dropping the menu search.
+- **`experimental.inlineCss` is off deliberately.** It measured well and broke
+  the admin dish page — `Price (USD)` never renders, so an owner cannot edit a
+  price. See the comment in `next.config.ts` before trying it again.
+- **Cold cache costs 9 points** (88 against 97). Next resizes images on demand
+  and a deploy wipes `.next/cache/images`, so the first visitor pays. Run
+  `node scripts/perf/warm-images.mjs <host> <port>` after deploying — 360
+  renditions in about 15 seconds — or that first customer gets the 88.
 - **Sizes are add/edit/remove only — they do not reorder.** Small/Large/Family
   come out in creation order. Nobody has asked for more; if they do, the dish
   page is already close to needing its own route.
