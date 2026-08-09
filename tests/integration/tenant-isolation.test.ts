@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { mayAdminister } from "@/core/auth/impersonation";
+import { findMembership } from "@/core/auth/repository";
 import { createDatabase, type Database } from "@/core/db/client";
 import { TENANT_SCOPED_TABLES } from "@/core/db/schema";
 import { InvalidTenantIdError, withTenant } from "@/core/db/tenant";
@@ -303,6 +305,62 @@ describe("menu deletion (isolation)", () => {
       createMenuRepository(session).findCategory(beta.categoryId),
     );
     expect(survivor?.sortOrder).toBe(0);
+  });
+});
+
+describe("operator impersonation (isolation)", () => {
+  /*
+   * requireMembership itself cannot be called here -- it reads cookies through
+   * next/headers. What CAN be checked against the real database is the pair of
+   * facts it combines: the membership lookup, and the rule applied to it. The
+   * end-to-end path is covered in tests/e2e/operator.spec.ts.
+   */
+  it("gives a platform admin no access they were not granted", async () => {
+    const { rows } = await adminPool.query<{ id: string }>(
+      `INSERT INTO users (email, name, password_hash, is_platform_admin)
+       VALUES ('operator-isolation@platform.test', 'op', 'x', true)
+       ON CONFLICT (email) DO UPDATE SET is_platform_admin = true
+       RETURNING id`,
+    );
+    const operatorId = rows[0]!.id;
+
+    // The flag alone grants no membership anywhere.
+    const membership = await findMembership(db, operatorId, tenantA);
+    expect(membership).toBeNull();
+
+    // Platform admin, no membership, not impersonating: still out. This is the
+    // property the whole console is built around, and the one it would be
+    // easiest to quietly repeal.
+    expect(
+      mayAdminister({
+        hasMembership: false,
+        isPlatformAdmin: true,
+        impersonatingTenantId: null,
+        tenantId: tenantA,
+      }),
+    ).toBe(false);
+
+    // Impersonating B does not open A.
+    expect(
+      mayAdminister({
+        hasMembership: false,
+        isPlatformAdmin: true,
+        impersonatingTenantId: tenantB,
+        tenantId: tenantA,
+      }),
+    ).toBe(false);
+
+    // Impersonating A opens A, and only A.
+    expect(
+      mayAdminister({
+        hasMembership: false,
+        isPlatformAdmin: true,
+        impersonatingTenantId: tenantA,
+        tenantId: tenantA,
+      }),
+    ).toBe(true);
+
+    await adminPool.query("DELETE FROM users WHERE id = $1", [operatorId]);
   });
 });
 
