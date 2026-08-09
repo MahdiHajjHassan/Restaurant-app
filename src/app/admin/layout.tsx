@@ -11,5 +11,18 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="flex min-h-full flex-1 flex-col">{children}</div>;
+  /*
+   * `console` scopes the workspace token set in globals.css to everything
+   * beneath /admin. The public menu keeps the paper palette it was designed
+   * around; nothing here reaches it.
+   *
+   * The background is painted here rather than on <body> for the same reason
+   * the tenant page paints its own: the tokens are scoped to this element, so
+   * the element has to use them.
+   */
+  return (
+    <div className="console flex min-h-full flex-1 flex-col bg-[var(--c-bg)] text-[var(--c-text)]">
+      {children}
+    </div>
+  );
 }

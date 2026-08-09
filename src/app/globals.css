@@ -80,6 +80,90 @@ body {
 }
 
 /*
+ * The console's own design language.
+ *
+ * Everything under /admin used to be built from the tokens above -- the menu's
+ * warm paper, muted ink and hairline rules. Those exist to make a customer feel
+ * they are reading a printed page, and they are wrong for a tool: status became
+ * invisible, headings were barely larger than body text, and nothing looked
+ * clickable.
+ *
+ * Cool on purpose. The rest of this product is warm, and an operator can
+ * impersonate an owner, so "am I looking at a customer's site or at the
+ * machinery behind it" has to be answerable at a glance.
+ *
+ * `--c-*`, never `--color-*`. The theme editor's live preview is located in
+ * tests by `[style*='--color-accent']`, taking the LAST match; a console style
+ * mentioning that variable would capture the selector and break it. Keeping the
+ * namespaces apart also guarantees the public menu is untouched.
+ */
+.console {
+  --c-bg: #edeff2;
+  --c-surface: #ffffff;
+  --c-surface-sunk: #f4f6f9;
+
+  --c-text: #14181d;
+  --c-text-muted: #57616f;
+  --c-text-subtle: #8892a0;
+
+  --c-border: #dce1e7;
+  --c-border-strong: #c0c8d2;
+
+  --c-brand: #24428f;
+  --c-brand-fg: #ffffff;
+  --c-brand-soft: #e9eef9;
+
+  --c-ok: #0f7a45;
+  --c-ok-soft: #e2f3ea;
+  --c-warn: #8a5a00;
+  --c-warn-soft: #fbf0d9;
+  --c-danger: #b0281f;
+  --c-danger-soft: #fbe9e7;
+
+  color-scheme: light;
+}
+
+/*
+ * The status spine.
+ *
+ * A restaurant is live, on trial, or suspended; a menu section is showing or
+ * hidden. That state was rendered as a small grey pill indistinguishable from
+ * every other small grey pill, which made the most important fact on the screen
+ * the hardest one to see. Here it is a coloured edge running down the whole
+ * row, so a list of restaurants reads at a glance the way a rail of tickets
+ * does.
+ *
+ * A border rather than a pseudo-element so it works under RTL for free:
+ * `border-inline-start` flips with direction.
+ */
+.spine {
+  border-inline-start: 3px solid var(--c-border-strong);
+}
+.spine-ok {
+  border-inline-start-color: var(--c-ok);
+}
+.spine-warn {
+  border-inline-start-color: var(--c-warn);
+}
+.spine-danger {
+  border-inline-start-color: var(--c-danger);
+}
+.spine-muted {
+  border-inline-start-color: var(--c-border-strong);
+}
+
+/*
+ * Identifiers -- hostnames, slugs, ids -- in the mono face.
+ *
+ * These are machine-readable strings a person has to compare character by
+ * character, so the face is carrying information rather than decorating.
+ */
+.identifier {
+  font-family: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+  font-feature-settings: "zero" 1;
+}
+
+/*
  * The leader rule.
  *
  * A menu's typographic signature is the line carrying your eye from a dish to

@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Amiri, Cairo, IBM_Plex_Sans_Arabic, Tajawal } from "next/font/google";
+import {
+  Amiri,
+  Cairo,
+  IBM_Plex_Mono,
+  IBM_Plex_Sans_Arabic,
+  Tajawal,
+} from "next/font/google";
 import "./globals.css";
 
 /*
@@ -52,9 +58,12 @@ const tajawal = Tajawal({
  * the page. Held constant across every pairing for exactly that reason -- the
  * display face is what varies between themes.
  *
- * Two weights, not three. 600 was declared and used exactly once, on the
- * suspended-site notice, which costs every menu visitor two font files for a
- * page almost nobody reaches.
+ * 600 exists for the CONSOLE's headings and must stay off the public menu. It
+ * was removed once already, when the only thing using it was a single heading
+ * on the suspended-site notice and every menu visitor paid two font files for a
+ * page almost nobody reaches. With `preload: false` the browser fetches a
+ * weight only where text actually renders in it, so keep public pages free of
+ * `font-semibold` and they stay free of this file. Measured, not assumed.
  *
  * `preload: false` here too, and this one was measured rather than assumed.
  * next/font preloads every declared subset, so an English menu was fetching
@@ -70,8 +79,28 @@ const tajawal = Tajawal({
  */
 const plexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["latin", "arabic"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
   variable: "--font-plex-arabic",
+  display: "swap",
+  preload: false,
+});
+
+/*
+ * The console's face for identifiers -- hostnames, slugs, ids.
+ *
+ * Same superfamily as the body face, so it pairs by design rather than by
+ * luck, and it carries information: these are machine-readable strings someone
+ * has to compare character by character.
+ *
+ * Latin only, and `preload: false`, so it is fetched on console pages and
+ * nowhere else. No public menu renders mono text, so no customer pays for it --
+ * the same mechanism that keeps three unused display faces off their pages.
+ * Verify in the network panel after touching this.
+ */
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
   display: "swap",
   preload: false,
 });
@@ -92,7 +121,7 @@ export default function RootLayout({
     <html
       lang="en"
       dir="ltr"
-      className={`${amiri.variable} ${cairo.variable} ${tajawal.variable} ${plexArabic.variable} h-full`}
+      className={`${amiri.variable} ${cairo.variable} ${tajawal.variable} ${plexArabic.variable} ${plexMono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
