@@ -1,13 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { Button, Field, Panel, inputClassName } from "@/ui/console";
 import { createRestaurant, type OperatorActionState } from "../actions";
 
 const initialState: OperatorActionState = { error: null };
-
-const field =
-  "rounded-md border border-[var(--color-rule)] bg-transparent px-3 py-2 text-[0.95rem]";
-const label = "text-[0.8rem] text-[var(--color-muted)]";
 
 /** Name -> slug, matching isValidSlug: lowercase, digits and hyphens only. */
 function slugify(name: string): string {
@@ -57,93 +54,104 @@ export function CreateRestaurantForm({
   const effectiveSlug = slugEdited ? slug : slugify(name);
 
   return (
-    <form action={formAction} className="mt-6 flex flex-col gap-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className={label}>Restaurant name</span>
-          <input
-            name="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-            className={field}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className={label}>Web address</span>
-          <input
-            name="slug"
-            value={effectiveSlug}
-            onChange={(event) => {
-              setSlugEdited(true);
-              setSlug(event.target.value);
-            }}
-            required
-            className={field}
-          />
-          <span className="text-[0.75rem] text-[var(--color-muted)]">
-            {effectiveSlug || "your-restaurant"}.{platformDomain}
-          </span>
-        </label>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className="flex flex-col gap-1.5">
-          <span className={label}>Currency</span>
-          <input
-            name="currency"
-            value={currency}
-            onChange={(event) => setCurrency(event.target.value)}
-            required
-            maxLength={3}
-            className={field}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className={label}>Timezone</span>
-          <input
-            name="timezone"
-            value={timezone}
-            onChange={(event) => setTimezone(event.target.value)}
-            required
-            className={field}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className={label}>Menu language</span>
-          <select
-            name="defaultLocale"
-            value={locale}
-            onChange={(event) => setLocale(event.target.value)}
-            className={field}
-          >
-            <option value="en">English</option>
-            <option value="ar">Arabic</option>
-          </select>
-        </label>
-      </div>
-
-      <fieldset className="flex flex-col gap-4 rounded-md border border-[var(--color-rule)] p-4">
-        <legend className={label}>Owner&rsquo;s login</legend>
-
+    /*
+     * Three panels rather than one column of fields: what the restaurant is,
+     * who owns it, and what it starts with. An operator fills this in with a
+     * client watching, and the grouping is what lets them say "now your login"
+     * instead of reading down a wall.
+     */
+    <form action={formAction} className="flex flex-col gap-4">
+      <Panel title="The restaurant">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5">
-            <span className={label}>Email</span>
+          <Field label="Restaurant name" required>
+            <input
+              name="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className={inputClassName}
+            />
+          </Field>
+
+          <Field
+            label="Web address"
+            required
+            hint={
+              <span className="identifier">
+                {effectiveSlug || "your-restaurant"}.{platformDomain}
+              </span>
+            }
+          >
+            <input
+              name="slug"
+              value={effectiveSlug}
+              onChange={(event) => {
+                setSlugEdited(true);
+                setSlug(event.target.value);
+              }}
+              required
+              className={`${inputClassName} identifier`}
+            />
+          </Field>
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Field label="Currency" required>
+            <input
+              name="currency"
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value)}
+              required
+              maxLength={3}
+              className={inputClassName}
+            />
+          </Field>
+
+          <Field label="Timezone" required>
+            <input
+              name="timezone"
+              value={timezone}
+              onChange={(event) => setTimezone(event.target.value)}
+              required
+              className={inputClassName}
+            />
+          </Field>
+
+          <Field label="Menu language">
+            <select
+              name="defaultLocale"
+              value={locale}
+              onChange={(event) => setLocale(event.target.value)}
+              className={inputClassName}
+            >
+              <option value="en">English</option>
+              <option value="ar">Arabic</option>
+            </select>
+          </Field>
+        </div>
+      </Panel>
+
+      <Panel
+        title="Owner’s login"
+        description="If this email already has an account, it keeps its current password and simply gains this restaurant."
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Email" required>
             <input
               name="ownerEmail"
               type="email"
               value={ownerEmail}
               onChange={(event) => setOwnerEmail(event.target.value)}
               required
-              className={field}
+              className={inputClassName}
             />
-          </label>
+          </Field>
 
-          <label className="flex flex-col gap-1.5">
-            <span className={label}>Initial password</span>
+          <Field
+            label="Initial password"
+            required
+            hint="Read this out to the owner; it is shown, not masked."
+          >
             {/*
               Deliberately type="text": the operator reads this out to the owner
               standing next to them. A masked field they cannot see helps
@@ -157,43 +165,43 @@ export function CreateRestaurantForm({
               onChange={(event) => setOwnerPassword(event.target.value)}
               required
               minLength={12}
-              className={field}
+              className={`${inputClassName} identifier`}
             />
-          </label>
+          </Field>
         </div>
+      </Panel>
 
-        <p className="text-[0.75rem] text-[var(--color-muted)]">
-          If this email already has an account, it keeps its current password
-          and simply gains this restaurant.
-        </p>
-      </fieldset>
-
-      <label className="flex items-center gap-2 text-[0.85rem]">
-        <input
-          type="checkbox"
-          name="exampleMenu"
-          checked={exampleMenu}
-          onChange={(event) => setExampleMenu(event.target.checked)}
-        />
-        Start with an example menu, for demoing
-      </label>
+      <Panel>
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[0.9rem]">
+          <input
+            type="checkbox"
+            name="exampleMenu"
+            checked={exampleMenu}
+            onChange={(event) => setExampleMenu(event.target.checked)}
+            className="size-4 accent-[var(--c-brand)]"
+          />
+          Start with an example menu, for demoing
+        </label>
+      </Panel>
 
       {state.error ? (
         <p
           role="alert"
-          className="rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="rounded-lg border border-[var(--c-danger)] bg-[var(--c-danger-soft)] px-3 py-2.5 text-[0.85rem] text-[var(--c-danger)]"
         >
           {state.error}
         </p>
       ) : null}
 
-      <button
+      <Button
         type="submit"
-        disabled={pending}
-        className="self-start rounded-md bg-[var(--color-accent)] px-4 py-2 text-[0.9rem] font-medium text-[var(--color-on-accent)] disabled:opacity-60"
+        variant="primary"
+        pending={pending}
+        pendingLabel="Creating…"
+        className="self-start"
       >
-        {pending ? "Creating…" : "Create restaurant"}
-      </button>
+        Create restaurant
+      </Button>
     </form>
   );
 }

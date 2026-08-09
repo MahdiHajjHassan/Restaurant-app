@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { Button, Field, inputClassName } from "@/ui/console";
 import { loginAction, type LoginState } from "./actions";
 
 const initial: LoginState = { error: null };
@@ -16,46 +17,53 @@ export function LoginForm() {
   }, [state.redirectTo]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[0.8rem] text-[var(--color-muted)]">Email</span>
+    <form
+      action={formAction}
+      className="flex flex-col gap-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] p-5"
+    >
+      <Field label="Email">
         <input
           name="email"
           type="email"
           autoComplete="username"
           required
-          className="rounded-md border border-[var(--color-rule)] bg-transparent px-3 py-2.5 text-[0.95rem]"
+          className={inputClassName}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[0.8rem] text-[var(--color-muted)]">Password</span>
+      <Field label="Password">
         <input
           name="password"
           type="password"
           autoComplete="current-password"
           required
-          className="rounded-md border border-[var(--color-rule)] bg-transparent px-3 py-2.5 text-[0.95rem]"
+          className={inputClassName}
         />
-      </label>
+      </Field>
 
       {state.error ? (
-        // Errors say what happened and what to do, in the interface's voice.
+        /*
+         * Errors say what happened and what to do, in the interface's voice.
+         * In the danger colour now rather than the same grey box as everything
+         * else -- a failed sign-in should not look like a footnote.
+         */
         <p
           role="alert"
-          className="rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="rounded-lg border border-[var(--c-danger)] bg-[var(--c-danger-soft)] px-3 py-2.5 text-[0.85rem] text-[var(--c-danger)]"
         >
           {state.error}
         </p>
       ) : null}
 
-      <button
+      <Button
         type="submit"
-        disabled={pending}
-        className="rounded-md bg-[var(--color-accent)] px-4 py-2.5 text-[0.9rem] font-medium text-[var(--color-on-accent)] disabled:opacity-60"
+        variant="primary"
+        pending={pending}
+        pendingLabel="Signing in…"
+        className="mt-1 w-full"
       >
-        {pending ? "Signing in…" : "Sign in"}
-      </button>
+        Sign in
+      </Button>
     </form>
   );
 }

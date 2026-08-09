@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/server/auth";
+import { EmptyState } from "@/ui/console";
 
 export default async function AdminHome() {
   const { user, memberships } = await requireSession();
@@ -12,12 +13,11 @@ export default async function AdminHome() {
     if (user.isPlatformAdmin) redirect("/operator");
 
     return (
-      <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-3 px-6 py-16 text-center">
-        <h1 className="font-display text-xl">No restaurant yet</h1>
-        <p className="text-[0.85rem] text-[var(--color-muted)]">
-          Your account is not linked to a restaurant. Ask whoever set this up to
-          add you.
-        </p>
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
+        <EmptyState
+          title="No restaurant yet"
+          description="Your account is not linked to a restaurant. Ask whoever set this up to add you."
+        />
       </main>
     );
   }
@@ -30,25 +30,33 @@ export default async function AdminHome() {
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 px-6 py-16">
-      <h1 className="font-display text-xl">Choose a restaurant</h1>
+      <h1 className="text-2xl font-semibold tracking-[-0.01em]">
+        Choose a restaurant
+      </h1>
 
       {user.isPlatformAdmin ? (
         <Link
           href="/operator"
-          className="text-[0.8rem] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+          className="-mt-3 text-[0.85rem] font-medium text-[var(--c-brand)] hover:underline"
         >
           Platform console →
         </Link>
       ) : null}
-      <ul className="flex flex-col gap-px overflow-hidden rounded-lg border border-[var(--color-rule)] bg-[var(--color-rule)]">
+
+      <ul className="overflow-hidden rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)]">
         {memberships.map((membership) => (
-          <li key={membership.tenantId}>
+          <li
+            key={membership.tenantId}
+            className="border-b border-[var(--c-border)] last:border-b-0"
+          >
             <Link
               href={`/${membership.tenantId}`}
-              className="flex items-baseline justify-between bg-[var(--color-paper)] px-4 py-3 hover:bg-[var(--color-paper-sunk)]"
+              className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-[var(--c-surface-sunk)]"
             >
-              <span className="font-medium">{membership.tenantName}</span>
-              <span className="text-[0.75rem] text-[var(--color-muted)] uppercase">
+              <span className="truncate font-medium">
+                {membership.tenantName}
+              </span>
+              <span className="shrink-0 text-[0.7rem] font-semibold tracking-wide text-[var(--c-text-subtle)] uppercase">
                 {membership.role}
               </span>
             </Link>

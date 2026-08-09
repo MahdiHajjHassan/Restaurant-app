@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { findRestaurant } from "@/core/platform/repository";
 import { requirePlatformAdmin } from "@/server/auth";
 import { db } from "@/server/db";
+import { PageHeader, Panel, StatusBadge } from "@/ui/console";
 import { DomainList } from "./domain-list";
 import { ImpersonateButton } from "./impersonate-button";
 import { StatusControl } from "./status-control";
@@ -19,45 +20,55 @@ export default async function OperatorRestaurantPage({
   if (!restaurant) notFound();
 
   return (
-    <main className="py-6">
+    <main>
       <Link
         href="/operator"
-        className="text-[0.8rem] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+        className="mt-6 inline-block text-[0.825rem] font-medium text-[var(--c-text-muted)] hover:text-[var(--c-text)]"
       >
         ← All restaurants
       </Link>
 
-      <h1 className="mt-2 font-display text-lg">{restaurant.name}</h1>
-      <p className="mt-1 text-[0.8rem] text-[var(--color-muted)]">
-        {restaurant.slug} · {restaurant.currency} · {restaurant.timezone} ·{" "}
-        {restaurant.defaultLocale === "ar" ? "Arabic" : "English"}
-      </p>
+      <PageHeader
+        title={restaurant.name}
+        description={
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="identifier">{restaurant.slug}</span>
+            <span aria-hidden="true">·</span>
+            <span>{restaurant.currency}</span>
+            <span aria-hidden="true">·</span>
+            <span>{restaurant.timezone}</span>
+            <span aria-hidden="true">·</span>
+            <span>
+              {restaurant.defaultLocale === "ar" ? "Arabic" : "English"}
+            </span>
+          </span>
+        }
+        actions={<StatusBadge status={restaurant.status} />}
+      />
 
-      <section className="mt-6">
-        <h2 className="font-display text-base">Status</h2>
-        <p className="mt-1 max-w-prose text-[0.8rem] text-[var(--color-muted)]">
-          A suspended restaurant explains itself to visitors rather than
-          disappearing. Nothing is deleted.
-        </p>
-        <div className="mt-3">
+      <div className="flex flex-col gap-4">
+        <Panel
+          title="Status"
+          description="A suspended restaurant explains itself to visitors rather than disappearing. Nothing is deleted."
+        >
           <StatusControl tenantId={restaurant.id} status={restaurant.status} />
-        </div>
-      </section>
+        </Panel>
 
-      <DomainList
-        tenantId={restaurant.id}
-        domains={restaurant.domains.map((domain) => ({
-          id: domain.id,
-          hostname: domain.hostname,
-          isPrimary: domain.isPrimary,
-          verified: domain.verifiedAt !== null,
-        }))}
-      />
+        <DomainList
+          tenantId={restaurant.id}
+          domains={restaurant.domains.map((domain) => ({
+            id: domain.id,
+            hostname: domain.hostname,
+            isPrimary: domain.isPrimary,
+            verified: domain.verifiedAt !== null,
+          }))}
+        />
 
-      <ImpersonateButton
-        tenantId={restaurant.id}
-        restaurantName={restaurant.name}
-      />
+        <ImpersonateButton
+          tenantId={restaurant.id}
+          restaurantName={restaurant.name}
+        />
+      </div>
     </main>
   );
 }

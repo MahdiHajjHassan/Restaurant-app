@@ -1,15 +1,19 @@
 "use client";
 
 import { useTransition } from "react";
+import { Button } from "@/ui/console";
 import { signOutAction } from "./actions";
 
 export function SignOutButton() {
   const [pending, startTransition] = useTransition();
 
   return (
-    <button
+    <Button
       type="button"
-      disabled={pending}
+      variant="ghost"
+      size="sm"
+      pending={pending}
+      pendingLabel="Signing out…"
       onClick={() =>
         startTransition(async () => {
           await signOutAction();
@@ -18,9 +22,8 @@ export function SignOutButton() {
           window.location.assign("/login");
         })
       }
-      className="shrink-0 rounded-full border border-[var(--color-rule)] px-3 py-1 text-[0.8rem] text-[var(--color-muted)] hover:text-[var(--color-ink)] disabled:opacity-60"
     >
-      {pending ? "Signing out…" : "Sign out"}
-    </button>
+      Sign out
+    </Button>
   );
 }
