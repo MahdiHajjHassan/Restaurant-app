@@ -38,32 +38,31 @@ one specific reason named below.
 | 4a — Admin core | **Done** | Session auth, rate-limited login, edit dishes, sold-out toggle, hours editor |
 | 4b — Media | **Done** | Magic-byte validation, EXIF/GPS stripping, resize, blur placeholder, dish photos + logo |
 | 4c — Menu CRUD | **Done** | Quick-add sections and dishes, rename/hide/delete, reorder, variants, empty states |
-| 5 — Operator console | **Not started** | — |
+| 5 — Operator console | **Done** | Create restaurant + subdomain + owner in one form, status, domains, impersonation |
 | 6 — Hardening | **Not started** | — |
 | 7 — Commercial | **Not started** | — |
 
-Test coverage: 208 unit/integration (against a real PostgreSQL) + 122 browser
+Test coverage: 230 unit/integration (against a real PostgreSQL) + 126 browser
 tests across desktop and mobile.
 
 ### The one thing blocking a sale
 
-**A new restaurant still has to be created with SQL.** An owner can now build
-and change their whole menu themselves — that was Phase 4c, and it is done. What
-no one can do from a browser is bring a restaurant into existence: create the
-tenant, attach a domain, mark it verified. That is `scripts/db/seed.sql` and a
-`psql` session.
+**Nothing is deployed.** There is no domain and no hosting, so no customer can
+reach a restaurant's site. Every piece of software needed to onboard a client
+now exists and is tested end to end; what is missing is a server.
 
-So onboarding is now half self-service and half hand-written SQL, which still
-contradicts the fact this plan rests on: the 10th client must cost nearly
-nothing to onboard. Phase 5 closes it.
+That is a spending decision rather than an engineering one, which is why it sits
+above everything else here: hardening an application nobody can reach, or
+writing commercial terms for a product with no customers, is work done in the
+dark.
 
 ### Critical path to the first paying client
 
 In order. Each is a prerequisite for the next being worth doing.
 
-1. **Phase 5 — Operator console.** Create a tenant, attach and verify a domain,
-   impersonate for support. Today a new restaurant requires editing
-   `scripts/db/seed.sql` by hand.
+1. **Deploy.** A domain, a host, a wildcard subdomain and TLS. Once it exists,
+   `attachDomain` in `core/platform/repository.ts` becomes a real DNS check
+   rather than a manual assertion.
 2. **Phase 6 — Hardening.** Sentry, structured logs, nonce-based CSP (the
    roadmap is right that retrofitting this is misery — theme tokens are already
    inline styles), backups with a *tested* restore, Lighthouse budget in CI.
@@ -277,8 +276,16 @@ dominates completely, which is what the design was aiming for.
 **Password reset — NOT STARTED.** There is no email adapter yet. Resetting a
 password today means running `scripts/create-admin.ts`.
 
-### Phase 5 — Platform console + onboarding — **NOT STARTED**
-Create tenant; attach domain with DNS-verification status UI; **impersonate for support**; set custom CSS. Plus a **seeded demo restaurant** — you need something to show owners before they've given you a single photo.
+### Phase 5 — Platform console + onboarding — **DONE**
+Create tenant; attach domain; **impersonate for support**; seeded demo menu. One form at `app.<platform>/operator/new` creates the restaurant, its already-verified subdomain, the owner's login and — optionally — an example menu, in place of `seed.sql` and `scripts/create-admin.ts`. Suspend/reactivate, attach and remove domains.
+
+**Two deviations from this roadmap, both deliberate.**
+
+**No automatic DNS verification.** It requires telling a restaurant which address to point at, and nothing is deployed, so there is no address. Code written now would be guessing at a target and tested against nothing — the failure mode being a green tick nobody has earned, which is worse than no status at all. The console says so on screen. The seam is `attachDomain` in `core/platform/repository.ts`; `setDomainVerified` becomes its result rather than an operator's assertion.
+
+**No operator custom CSS**, though `theme_settings.custom_css` exists. No client has asked for bespoke styling, and injecting operator CSS creates a surface the Phase 6 nonce-based CSP would then have to be designed around. The column stays; the screen is a textarea and an action whenever someone actually wants it.
+
+**Impersonation is scoped, not ambient.** Being a platform admin is deliberately *not* access to a restaurant: entry requires a membership, or platform-admin plus actively impersonating that exact tenant. Leaving goes through a redirecting route handler rather than a Server Action, because clearing the cookie removes access to the page the caller is standing on and the action's own re-render would race the client's navigation.
 
 ### Phase 6 — Production hardening — **NOT STARTED**
 Sentry + structured logs; graceful states for unknown host / suspended tenant / DB down / image 404; automated backups with a **tested restore**; Playwright suite over client-losing paths; Lighthouse budget in CI; security headers + **nonce-based CSP from day one** (theme tokens are inline styles; retrofitting CSP onto a styled app is misery); staging environment; zero-downtime migration process.
@@ -326,10 +333,11 @@ an intention.
 - **DONE** — **Isolation test (the critical one):** seed two tenants; assert every repository method and every page route returns only the correct tenant's data; repeat with the repository layer bypassed to confirm RLS alone holds. Now also covers `theme_settings` and `media`
 - **DONE** — **Playwright:** load a tenant by host and see its menu; switch to Arabic and confirm RTL mirroring; toggle sold-out in admin and watch it grey out on the public site (122 tests, desktop + mobile)
 - **DONE** — **Build a menu from nothing:** starting on a tenant with no categories at all, add a section, add three dishes through quick-add, reorder one, delete one, and confirm the result on the public site. The onboarding claim exists as a test rather than as a hope
+- **DONE** — **The sale, start to finish:** the operator creates a restaurant in the browser, the owner signs in with the password just set and lands on their own menu, and a customer reads it on an address that did not exist a minute earlier. Plus: a restaurant owner hitting `/operator` gets nothing, and a platform admin who is not impersonating gets no access to a restaurant they have no membership in
 - **DONE** — Theming and media specifically: two tenants render different palettes and fonts; only the themed display face downloads; a contrast-failing palette is refused by the Server Action even when the disabled button is re-enabled from the console; a GPS-tagged portrait phone photo stores upright with no EXIF
 - **PENDING** — change a price and confirm only *that* tenant's cache invalidated. Writes call `revalidatePath`, but nothing asserts the blast radius
 - **PENDING** — **Lighthouse** on a seeded 90-item menu: performance ≥ 95 mobile, accessibility 100. The seed has 5 dishes, so the perf budget has never been tested at realistic menu size. Belongs with Phase 6
-- **PARTLY DONE** — **Manual:** onboard the demo restaurant end-to-end and time it. **Target: under 15 minutes** from zero to a live themed site. The menu half is now measured: 30 dishes through quick-add ran at a median 149 ms per dish of system time with no growth as the list lengthened, so a 90-item menu costs ~14 seconds of waiting and is bounded by typing speed. The *whole* run still cannot be timed until Phase 5 — creating the tenant and attaching its domain is still hand-written SQL
+- **PARTLY DONE** — **Manual:** onboard the demo restaurant end-to-end and time it. **Target: under 15 minutes** from zero to a live themed site. Both halves now exist in a browser: creating the restaurant is one form, and 30 dishes through quick-add ran at a median 149 ms per dish of system time with no growth as the list lengthened, so a 90-item menu costs ~14 seconds of waiting and is bounded by typing speed. What has still never been done is the *whole* run against a real deployment on a real domain, which is the only version of this measurement that counts
 
 ---
 

@@ -11,14 +11,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A multi-tenant white-label platform: one codebase serving many restaurant websites. Each restaurant is a tenant with its own domain, theme, and bilingual (English/Arabic) menu. Roadmap and locked product decisions live in `docs/roadmap.md`.
 
-Currently at the end of **Phase 4c** (menu CRUD: an owner builds and changes their whole menu themselves — quick-add, rename, hide, reorder, delete, sizes), on top of Phase 3 theming and the 4b media pipeline.
+Currently at the end of **Phase 5** (operator console: create a restaurant, its subdomain and its owner's login from a browser; suspend; attach domains; impersonate for support), on top of Phase 4c menu CRUD, Phase 3 theming and the 4b media pipeline.
 
-**The next thing that matters is Phase 5 — the operator console.** Creating a restaurant is still hand-written SQL: nothing in a browser can create a tenant, attach a domain and mark it verified. That is the last gap between this and a same-day sale.
+**The next thing that matters is not code: nothing is deployed.** There is no domain and no host, so no customer can reach a site. Every piece of onboarding software exists and is tested end to end; automatic DNS verification is deliberately unbuilt because there is no address to tell anyone to point at (see `attachDomain` in `core/platform/repository.ts`, which is the seam).
 
-The admin is served from `app.<PLATFORM_DOMAIN>` — locally `app.localhost:3000`. Create a user with:
+The admin is served from `app.<PLATFORM_DOMAIN>` — locally `app.localhost:3000`. `create-admin.ts` is for the **first operator only**; every restaurant after that is created at `/operator`:
 
 ```bash
-node scripts/create-admin.ts you@example.com yourpassword alpha-grill owner
+node scripts/create-admin.ts you@example.com yourpassword alpha-grill owner --platform-admin
 ```
 
 ## Branch workflow
@@ -139,11 +139,17 @@ Migrations run as the owner (`MIGRATION_DATABASE_URL`); the app only ever uses `
 - **`themeCssVariables` emits `--font-display` / `--font-body`, not the inner `--font-*-family`.** `globals.css` declares `--font-display: var(--font-display-family)` on `:root`, so that substitution is baked at `:root` and inherits down already-resolved — overriding the inner variable further down the tree silently does nothing.
 - **`next/font` cannot pick a family at runtime**, so every display face is declared in the root layout and the theme chooses one by variable. They carry `preload: false`; the default preloads all of them, which fetched four families on every page load.
 - **Palette overrides are sparse** — only tokens the owner actually changed, so an untouched token keeps following the curated palette. A named `<input type="color">` posts on every submit and would materialise all seven; the visible control is unnamed and a hidden field carries only real changes.
+- **`core/platform/` takes a `Database`, never a `TenantSession`.** `tenants`, `domains`, `users` and `memberships` are read *before* a tenant context can exist and are outside RLS — so there is no policy underneath those queries and the `WHERE` clause **is** the isolation. Every statement writes its scope out, including `tenantId` alongside a domain id.
+- **Platform-admin is NOT ambient access to a restaurant.** Entry requires a membership, OR platform-admin *and* actively impersonating that exact tenant. The rule is a truth table in `core/auth/impersonation.ts`; the impersonation cookie only names *which* tenant, and `users.is_platform_admin` is re-read server-side every request, so a forged cookie buys nothing.
+- **Creating a restaurant never overwrites an existing user's password.** Otherwise "create a restaurant for this email" becomes "take over that account", including another operator's. Existing users are reused and the submitted password ignored.
+- **An action that revokes the caller's own access cannot navigate afterwards.** Clearing the impersonation cookie removes access to the current page, and a Server Action re-renders that page as part of its response — so `requireMembership` redirects at the same moment the client navigates, and the two race. Use a route handler returning a redirect instead (`admin/operator/leave/route.ts`).
+- **Build the platform subdomain with `platformSubdomain()`.** It runs `PLATFORM_DOMAIN` through `normalizeHostname`, because the `domains` table stores hostnames without a port and any other spelling is a tenant that silently cannot be reached.
 - **A foreign key does NOT enforce tenant isolation.** PostgreSQL evaluates FK checks as the table owner, which bypasses RLS — so `items.category_id` and `item_variants.item_id` arriving from a client are not vetted by any policy. Every action that takes a parent id looks it up through the tenant-scoped repository first. Same reasoning already documented for `imageId`.
 - **Reorder sends the full ordered list, never a "move up" delta.** Two open tabs each sending a swap interleave into an order neither owner asked for; the last full list to land is at least coherent. Ids belonging to another tenant match no row and are skipped, so a stale list degrades instead of failing.
 - **`FormData.get()` answers `null` for a field a form does not contain, and Zod `.optional()` rejects `null`.** A form that omits an optional field fails with "expected string, received null" — a type complaint shown to an owner who did nothing wrong. Normalise with `optionalText()` at the action boundary.
 - **Integration test files must not `TRUNCATE`.** Vitest runs test files concurrently against one database, so a truncate deletes another file's fixtures mid-run and the failure reads exactly like an isolation bug. Delete only your own slugs.
 - **`getByLabel` substring-matches.** "Price (USD)" also matches "New size price (USD)", so a loose selector breaks the day a page gains a field. Use `{ exact: true }` on any label that is a prefix of another.
+- **A Playwright per-wait timeout must stay well under the per-test one.** Setting both to 30s made a slow test die as an unattributed whole-test timeout instead of failing at the step that was actually stuck, which hid a real bug for two runs.
 - **Only one `next dev` per directory.** Next 16 refuses a second instance regardless of port, so the browser suite cannot start its own server while a preview dev server is up — stop that one first, even when using `E2E_PORT`.
 - **Do not call `setState` inside an effect** — the React compiler's lint rejects it. For a form that must clear after submitting, leave the inputs uncontrolled: React resets an uncontrolled form once its action settles, and the effect is then free to do only what lives outside React (focus, `router.refresh()`).
 - **Uploads are sniffed by magic bytes**; the declared `Content-Type` is attacker-controlled and never trusted. SVG is deliberately off the allowlist — it can carry script and would be served same-origin.

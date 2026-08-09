@@ -1,6 +1,6 @@
 # Status — read this first
 
-**Last updated:** 8 August 2026, after Phase 4c (menu CRUD) merged to `main`.
+**Last updated:** 9 August 2026, after Phase 5 (operator console) merged to `main`.
 
 If you are a new session picking this up, this file orients you in about two
 minutes. Then read `CLAUDE.md` for the conventions that carry real consequences,
@@ -34,8 +34,9 @@ typechecking. Do not report something as working until you have watched it work.
 
 ## Where R1 stands
 
-Roughly **80% built**. An owner can now run their own menu end to end. What is
-still missing to make a sale is named below.
+Roughly **90% built**. The whole onboarding path now works in a browser, from
+creating a restaurant to a customer reading its menu. What is missing is named
+below, and it is no longer code.
 
 | Phase | State |
 |---|---|
@@ -43,23 +44,24 @@ still missing to make a sale is named below.
 | 3 Theming | Done |
 | 4a Admin core, 4b Media | Done |
 | 4c Menu CRUD | Done |
-| 5 Operator console | **Not started — this is the blocker** |
-| 6 Hardening, 7 Commercial | Not started |
+| 5 Operator console | Done |
+| 6 Hardening, 7 Commercial | **Not started** |
 
-Tests: **208 unit/integration** (against a real PostgreSQL) + **122 browser**
+Tests: **230 unit/integration** (against a real PostgreSQL) + **126 browser**
 tests across desktop and mobile.
 
 ## The one thing blocking a sale
 
-**A new restaurant still has to be created with SQL.** The owner-facing half is
-done: they can add, rename, hide, reorder and delete sections and dishes, set
-sizes, and see it live immediately. What nobody can do from a browser is bring a
-restaurant into existence — create the tenant, attach its domain, mark it
-verified. That is still `scripts/db/seed.sql` and a `psql` session.
+**Nothing is deployed.** There is no domain and no hosting, so no customer can
+reach a site. That is now the only thing between this product and a paying
+client — and it is a decision about money and accounts, not a piece of work
+anyone can do for you.
 
-So onboarding is half self-service and half hand-written SQL, which still
-contradicts the first fact above. **Phase 5 (operator console) is the next thing
-that matters.**
+Everything else is done. An operator creates a restaurant in a browser, hands
+the owner a password, and the owner builds their menu. No SQL anywhere.
+
+**This is the point to decide about hosting.** Until then the product can be
+demoed on a laptop, which is enough to sell, but not to deliver.
 
 ### What Phase 4c actually delivered
 
@@ -80,6 +82,30 @@ slowdown as the list grew — the last dishes were as fast as the first. A 90-it
 menu therefore costs about 14 seconds of waiting in total; the rest is typing
 speed. That was the design's main risk, and it holds.
 
+### What Phase 5 delivered
+
+- **A console at `app.<platform>/operator`**, for your platform-admin account
+  only. Every restaurant, its address and its status, on one screen.
+- **One form creates everything**: the restaurant, its web address (already
+  verified — it is your own subdomain), the owner's login, and optionally an
+  example menu to demo with. This replaces `seed.sql` *and*
+  `scripts/create-admin.ts`.
+- Suspend and reactivate. A suspended site explains itself rather than 404ing.
+- Attach extra domains, and mark them verified by hand.
+- **Sign in as an owner** for support, with an unmissable banner and a way out.
+
+**Automatic DNS verification is deliberately not built.** It means telling a
+restaurant "point your domain at this address" and then checking they did —
+and with nothing deployed there is no address to name. Writing it now would
+mean guessing at a target and testing against nothing. The console says so on
+screen rather than showing a green tick it has not earned. The seam is one
+function: `attachDomain` in `src/core/platform/repository.ts`.
+
+**Operator-only custom CSS is also not built**, though the column exists. No
+client has asked for bespoke styling, and it would create a surface the Phase 6
+nonce-based CSP then has to be designed around. Adding the screen later is a
+textarea and an action.
+
 ## Getting running
 
 ```bash
@@ -98,6 +124,11 @@ npm run dev
 ```
 
 Verify with `npm run verify` then `E2E_PORT=3100 npm run test:e2e`.
+
+`create-admin.ts` is now only for the **first** operator account — the one that
+gets you into the console. Every restaurant after that is created at
+`app.localhost:3000/operator`, which also sets its owner's password. There is no
+longer any reason to touch `seed.sql` to onboard someone.
 
 The admin accounts above are for **demoing by hand**. The browser suite does not
 need them: any spec that writes provisions its own restaurant and owner through
@@ -152,10 +183,11 @@ fixture use the OS resolver and will fail; hit `127.0.0.1` with an explicit
 
 In order — each is a prerequisite for the next being worth doing:
 
-1. **Phase 5 — Operator console.** Create a tenant, attach and verify a domain,
-   impersonate for support. Also the right home for operator-only custom CSS,
-   which is specified but deliberately unbuilt. This is the last thing standing
-   between the product and a same-day sale.
+1. **Deploy it.** Buy a domain, pick a host, put it online with a wildcard
+   subdomain and TLS. This is a spending decision, so it needs you. Nothing
+   below is worth doing first: hardening an application nobody can reach, or
+   writing terms for a product with no customers, is work done in the dark.
+   Once it is live, `attachDomain` becomes a real DNS check.
 2. **Phase 6 — Hardening.** Sentry, structured logs, nonce-based CSP, backups
    with a *tested* restore, Lighthouse budget in CI.
 3. **Phase 7 — Commercial.** Privacy policy, terms, Arabic help docs, pricing.
