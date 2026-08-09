@@ -7,7 +7,7 @@ import { createItem, type MenuActionState } from "./actions";
 const initialState: MenuActionState = { error: null };
 
 const field =
-  "rounded-md border border-[var(--color-rule)] bg-transparent px-3 py-2 text-[0.95rem]";
+  "min-h-11 rounded-lg border border-[var(--c-border-strong)] bg-[var(--c-surface)] px-3 py-2 text-[0.95rem] placeholder:text-[var(--c-text-subtle)]";
 
 /**
  * The fast path, and the reason this phase is designed the way it is.
@@ -51,7 +51,7 @@ export function QuickAddItem({
   }, [state, router]);
 
   return (
-    <form action={formAction} className="mt-2 flex flex-wrap items-center gap-2">
+    <form action={formAction} className="flex flex-wrap items-center gap-2">
       {/*
         Labels name their section. There is one of these rows per section, so an
         unqualified "Dish name" would be ambiguous to a screen reader and would
@@ -82,20 +82,23 @@ export function QuickAddItem({
         type="submit"
         disabled={pending}
         aria-label={`Add dish to ${categoryName}`}
-        className="shrink-0 rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem] disabled:opacity-60"
+        className="min-h-11 shrink-0 rounded-lg bg-[var(--c-brand)] px-4 text-[0.875rem] font-medium text-[var(--c-brand-fg)] disabled:opacity-55"
       >
         {pending ? "Adding…" : "Add"}
       </button>
 
       {state.error ? (
-        <p role="alert" className="basis-full text-[0.8rem]">
+        <p
+          role="alert"
+          className="basis-full text-[0.8rem] text-[var(--c-danger)]"
+        >
           {state.error}
         </p>
       ) : null}
       {state.saved ? (
         <p
           role="status"
-          className="basis-full text-[0.8rem] text-[var(--color-accent)]"
+          className="basis-full text-[0.8rem] font-medium text-[var(--c-ok)]"
         >
           Added to {categoryName}.
         </p>

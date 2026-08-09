@@ -7,7 +7,7 @@ import { createCategory, type MenuActionState } from "./actions";
 const initialState: MenuActionState = { error: null };
 
 const field =
-  "rounded-md border border-[var(--color-rule)] bg-transparent px-3 py-2 text-[0.95rem]";
+  "min-h-11 rounded-lg border border-[var(--c-border-strong)] bg-[var(--c-surface)] px-3 py-2 text-[0.95rem]";
 
 /**
  * One row that creates a section and immediately offers the next.
@@ -33,9 +33,9 @@ export function AddCategory({ tenantId }: { tenantId: string }) {
   }, [state, router]);
 
   return (
-    <form action={formAction} className="mt-4 flex flex-wrap items-end gap-2">
+    <form action={formAction} className="flex flex-wrap items-end gap-2">
       <label className="flex min-w-40 flex-1 flex-col gap-1.5">
-        <span className="text-[0.8rem] text-[var(--color-muted)]">
+        <span className="text-[0.8rem] font-medium text-[var(--c-text-muted)]">
           New section
         </span>
         <input
@@ -48,7 +48,7 @@ export function AddCategory({ tenantId }: { tenantId: string }) {
       </label>
 
       <label className="flex min-w-40 flex-1 flex-col gap-1.5">
-        <span className="text-[0.8rem] text-[var(--color-muted)]">
+        <span className="text-[0.8rem] font-medium text-[var(--c-text-muted)]">
           Arabic name (optional)
         </span>
         <input
@@ -61,20 +61,23 @@ export function AddCategory({ tenantId }: { tenantId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-[0.9rem] font-medium text-[var(--color-on-accent)] disabled:opacity-60"
+        className="min-h-11 rounded-lg bg-[var(--c-brand)] px-4 text-[0.9rem] font-medium text-[var(--c-brand-fg)] disabled:opacity-55"
       >
         {pending ? "Adding…" : "Add section"}
       </button>
 
       {state.error ? (
-        <p role="alert" className="basis-full text-[0.8rem]">
+        <p
+          role="alert"
+          className="basis-full text-[0.8rem] text-[var(--c-danger)]"
+        >
           {state.error}
         </p>
       ) : null}
       {state.saved ? (
         <p
           role="status"
-          className="basis-full text-[0.8rem] text-[var(--color-accent)]"
+          className="basis-full text-[0.8rem] font-medium text-[var(--c-ok)]"
         >
           Section added.
         </p>

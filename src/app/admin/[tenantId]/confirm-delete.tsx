@@ -19,7 +19,7 @@ interface ConfirmDeleteProps {
 }
 
 const ghost =
-  "rounded-md border border-[var(--color-rule)] px-2 py-1 text-[0.75rem] text-[var(--color-muted)] hover:text-[var(--color-ink)] disabled:opacity-60";
+  "inline-flex min-h-11 items-center justify-center rounded-lg border border-transparent px-2.5 text-[0.8rem] font-medium text-[var(--c-text-muted)] hover:bg-[var(--c-surface-sunk)] hover:text-[var(--c-text)] disabled:opacity-35";
 
 export function ConfirmDelete({
   label,
@@ -35,7 +35,7 @@ export function ConfirmDelete({
     return (
       <span className="flex shrink-0 items-center gap-2">
         {error ? (
-          <span role="alert" className="text-[0.7rem] text-[var(--color-muted)]">
+          <span role="alert" className="text-[0.7rem] text-[var(--c-danger)]">
             {error}
           </span>
         ) : null}
@@ -75,7 +75,7 @@ export function ConfirmDelete({
             router.refresh();
           })
         }
-        className="rounded-md bg-[var(--color-accent)] px-2 py-1 text-[0.75rem] text-[var(--color-on-accent)] disabled:opacity-60"
+        className="min-h-11 rounded-lg bg-[var(--c-danger)] px-3 text-[0.8rem] font-semibold text-white disabled:opacity-55"
       >
         {pending ? "Deleting…" : "Yes, delete"}
       </button>

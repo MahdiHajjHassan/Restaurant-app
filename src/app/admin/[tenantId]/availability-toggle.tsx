@@ -48,7 +48,7 @@ export function AvailabilityToggle({
   return (
     <span className="flex shrink-0 items-center gap-2">
       {failed ? (
-        <span role="alert" className="text-[0.7rem] text-[var(--color-muted)]">
+        <span role="alert" className="text-[0.7rem] text-[var(--c-danger)]">
           Not saved
         </span>
       ) : null}
@@ -60,10 +60,17 @@ export function AvailabilityToggle({
         role="switch"
         aria-checked={available}
         aria-label={`${itemName} available`}
-        className={`rounded-full border px-2.5 py-1 text-[0.75rem] transition-colors disabled:opacity-60 ${
+        /*
+         * Sold out is the loud state, not available.
+         *
+         * "Available" is every dish on a working menu, so it stays quiet;
+         * sold out is the exception an owner needs to spot from across the
+         * kitchen and put back.
+         */
+        className={`inline-flex min-h-11 shrink-0 items-center rounded-lg border px-3 text-[0.8rem] font-medium transition-colors disabled:opacity-55 ${
           available
-            ? "border-[var(--color-rule)] text-[var(--color-muted)]"
-            : "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-on-accent)]"
+            ? "border-[var(--c-border-strong)] bg-[var(--c-surface)] text-[var(--c-text-muted)] hover:text-[var(--c-text)]"
+            : "border-[var(--c-danger)] bg-[var(--c-danger-soft)] text-[var(--c-danger)]"
         }`}
       >
         {available ? "Available" : "Sold out"}

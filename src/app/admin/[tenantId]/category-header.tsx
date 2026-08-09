@@ -10,11 +10,16 @@ import {
 } from "./actions";
 import { ConfirmDelete } from "./confirm-delete";
 
+/*
+ * 44px tall even though these read as small controls. Every one of them is a
+ * tap target on a phone held in one hand in a kitchen, and a 24px button there
+ * is a mis-tap that deletes a section.
+ */
 const ghost =
-  "rounded-md border border-[var(--color-rule)] px-2 py-1 text-[0.75rem] text-[var(--color-muted)] hover:text-[var(--color-ink)] disabled:opacity-40";
+  "inline-flex min-h-11 items-center justify-center rounded-lg border border-transparent px-2.5 text-[0.8rem] font-medium text-[var(--c-text-muted)] hover:bg-[var(--c-surface-sunk)] hover:text-[var(--c-text)] disabled:opacity-35 disabled:hover:bg-transparent";
 
 const field =
-  "rounded-md border border-[var(--color-rule)] bg-transparent px-2 py-1 text-[0.9rem]";
+  "min-h-11 rounded-lg border border-[var(--c-border-strong)] bg-[var(--c-surface)] px-3 py-2 text-[0.9rem]";
 
 /**
  * Reorder by buttons, not by drag.
@@ -163,7 +168,7 @@ export function CategoryHeader({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-[var(--color-accent)] px-3 py-1 text-[0.8rem] text-[var(--color-on-accent)] disabled:opacity-60"
+          className="min-h-11 rounded-lg bg-[var(--c-brand)] px-4 text-[0.85rem] font-medium text-[var(--c-brand-fg)] disabled:opacity-55"
         >
           {pending ? "Saving…" : "Save"}
         </button>
@@ -180,7 +185,10 @@ export function CategoryHeader({
           Cancel
         </button>
         {error ? (
-          <p role="alert" className="basis-full text-[0.8rem]">
+          <p
+            role="alert"
+            className="basis-full text-[0.8rem] text-[var(--c-danger)]"
+          >
             {error}
           </p>
         ) : null}
@@ -190,18 +198,22 @@ export function CategoryHeader({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <h2 className="flex min-w-0 flex-1 items-baseline gap-2 font-display text-base">
+      {/* basis-full on a phone for the same reason the dish name takes its own
+          row: six controls beside it leave nothing for the section's name. */}
+      <h2 className="flex min-w-0 flex-1 basis-full items-baseline gap-2 text-[1rem] font-semibold sm:basis-auto">
         <span className="truncate">{nameEn}</span>
         {nameAr ? (
           <span
             dir="rtl"
-            className="truncate text-[0.8rem] text-[var(--color-muted)]"
+            className="truncate text-[0.825rem] font-normal text-[var(--c-text-muted)]"
           >
             {nameAr}
           </span>
         ) : null}
         {!isVisible ? (
-          <span className="shrink-0 rounded-sm border border-[var(--color-rule)] px-1.5 py-0.5 text-[0.65rem] tracking-wide text-[var(--color-muted)] uppercase">
+          // A hidden section is a state, not a fault: the owner chose it, and
+          // the spine on the panel says the same thing more quietly.
+          <span className="shrink-0 rounded-full bg-[var(--c-surface-sunk)] px-2 py-0.5 text-[0.65rem] font-semibold tracking-wide text-[var(--c-text-muted)] uppercase">
             Hidden
           </span>
         ) : null}
