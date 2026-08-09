@@ -170,7 +170,7 @@ Ordered. Items marked **(A)** apply only to the rented-server route,
 | 11 | Deploy pipeline | Build, run all 356 tests, deploy on green. Never deploy an untested tree |
 | 12 | Uptime monitoring + error tracking | Sentry is Phase 6; something must page us before a client notices |
 | 13 | Security review | Before public exposure, not after |
-| 14 | ~~Lighthouse at realistic menu size~~ | **Done, 9 Aug 2026.** Grid 97 mobile at 90 dishes, both languages. Adds one deploy step: warm the image cache before sending traffic |
+| 14 | ~~Lighthouse at realistic menu size~~ | **Done, 9 Aug 2026.** Every preset ≥95 mobile at 90 dishes, both languages. Adds one deploy step: warm the image cache before sending traffic |
 
 ---
 
@@ -227,10 +227,9 @@ view on which, before launch rather than after.**
 
 **4. ~~Should the performance budget be measured before or after launch?~~
 ANSWERED — measured before, on 9 August 2026.**
-A 90-dish menu with a photograph on every dish scores **97 on mobile** for the
-grid preset in both languages, against a target of ≥95. It began at 83. The
-list preset — the default — is at 94 and is the one still short. Full numbers
-and how to reproduce them are in `docs/STATUS.md`.
+A 90-dish menu with a photograph on every dish clears **≥95 on mobile in every
+layout and both languages**: editorial 98, list 97, grid 96. Grid began at 83
+and list at 90. Full numbers and how to reproduce them are in `docs/STATUS.md`.
 
 Two findings that change deployment work rather than application code:
 

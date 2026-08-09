@@ -115,13 +115,14 @@ dish — the worst honest case for the flagship grid preset.
 
 | | Score | LCP |
 |---|---|---|
-| Grid, English | **97** | 2.6 s |
-| Grid, Arabic | **97** | 2.5 s |
-| Editorial | **95** | 2.8 s |
-| List (the default) | **94** | 3.0 s |
+| Editorial | **98** | 2.2 s |
+| List (the default) | **97** | 2.6 s |
+| Grid, English | **96** | 2.7 s |
+| Grid, Arabic | **96** | 2.7 s |
 | Grid, cold optimizer cache | 88 | 3.9 s |
 
-Grid started at **83**. Three changes took it to 97, each measured on its own:
+**Every preset clears the target, in both languages.** Grid started at 83 and
+list at 90. Four changes got them there, each measured on its own:
 
 1. **The photo that is the largest paint is no longer lazy-loaded.** Every image
    in the opening viewport was `loading="lazy"` with no preload, so the six a
@@ -132,6 +133,12 @@ Grid started at **83**. Three changes took it to 97, each measured on its own:
    page that renders two typefaces.
 3. **`fetchPriority="high"` set explicitly.** Next 16 emits it nowhere, and
    Lighthouse wants the LCP image eager *and* discoverable *and* high-priority.
+4. **The language toggle stopped pulling the Arabic font onto English pages.**
+   A browser fetches a webfont subset whenever any character in its range is
+   rendered, so the seven characters of "العربية" were downloading the entire
+   33 KB Arabic subset of the body face on every English page. That is what
+   fixed the list preset, whose largest paint is text and which none of the
+   image work above could reach.
 
 Reproduce it — this needs a production build, so stop any dev server first:
 
@@ -174,6 +181,13 @@ npm run dev
 ```
 
 Verify with `npm run verify` then `E2E_PORT=3100 npm run test:e2e`.
+
+The browser suite builds for production before it runs, which is what CI and
+customers get — and, it turns out, both faster and far more reliable than the
+dev server it used locally. Against `next dev` it passed 4 runs in 11, failing
+with a 404 on an admin page for a dish that provably existed; against a
+production build, 7 for 7, at 47s a run instead of 1.7m. To iterate on a single
+test without rebuilding, start `npx next start -p 3100` once and leave it up.
 
 `create-admin.ts` is now only for the **first** operator account — the one that
 gets you into the console. Every restaurant after that is created at
@@ -251,10 +265,9 @@ clients, not at fifty. Build it when support load says so.
 
 - Seeded dish photos are **generated placeholders**, not photography. Real CC0
   images are a separate step — ask before downloading anything.
-- **The list preset scores 94, one point under target, and it is the default.**
-  Its largest paint is a text block, not an image, so none of the image work
-  above touches it. What remains is 27 KB of unused framework JavaScript that
-  cannot go without dropping the menu search.
+- **27 KB of unused framework JavaScript** is the largest remaining item in the
+  audit, on every preset. It cannot go without dropping the menu search. Nothing
+  currently needs it: every preset is above target with it in place.
 - **`experimental.inlineCss` is off deliberately.** It measured well and broke
   the admin dish page — `Price (USD)` never renders, so an owner cannot edit a
   price. See the comment in `next.config.ts` before trying it again.
