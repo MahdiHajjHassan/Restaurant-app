@@ -27,9 +27,25 @@ export function CreateRestaurantForm({
     createRestaurant,
     initialState,
   );
+  /*
+   * Every field is controlled, deliberately.
+   *
+   * React resets an uncontrolled form once its action settles -- including
+   * when the action REJECTED it. Left uncontrolled, a refused submit wiped the
+   * owner's email and password, and silently reverted a currency the operator
+   * had changed from USD. Losing typed credentials while standing in front of
+   * a client is bad; silently reverting a currency is worse, because it looks
+   * like it worked and renders every price wrong.
+   */
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [currency, setCurrency] = useState("USD");
+  const [timezone, setTimezone] = useState("Asia/Beirut");
+  const [locale, setLocale] = useState("en");
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [ownerPassword, setOwnerPassword] = useState("");
+  const [exampleMenu, setExampleMenu] = useState(false);
 
   useEffect(() => {
     // Never redirect() from a Server Action here: the admin is reached by a
@@ -77,7 +93,8 @@ export function CreateRestaurantForm({
           <span className={label}>Currency</span>
           <input
             name="currency"
-            defaultValue="USD"
+            value={currency}
+            onChange={(event) => setCurrency(event.target.value)}
             required
             maxLength={3}
             className={field}
@@ -88,7 +105,8 @@ export function CreateRestaurantForm({
           <span className={label}>Timezone</span>
           <input
             name="timezone"
-            defaultValue="Asia/Beirut"
+            value={timezone}
+            onChange={(event) => setTimezone(event.target.value)}
             required
             className={field}
           />
@@ -96,7 +114,12 @@ export function CreateRestaurantForm({
 
         <label className="flex flex-col gap-1.5">
           <span className={label}>Menu language</span>
-          <select name="defaultLocale" defaultValue="en" className={field}>
+          <select
+            name="defaultLocale"
+            value={locale}
+            onChange={(event) => setLocale(event.target.value)}
+            className={field}
+          >
             <option value="en">English</option>
             <option value="ar">Arabic</option>
           </select>
@@ -109,7 +132,14 @@ export function CreateRestaurantForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5">
             <span className={label}>Email</span>
-            <input name="ownerEmail" type="email" required className={field} />
+            <input
+              name="ownerEmail"
+              type="email"
+              value={ownerEmail}
+              onChange={(event) => setOwnerEmail(event.target.value)}
+              required
+              className={field}
+            />
           </label>
 
           <label className="flex flex-col gap-1.5">
@@ -123,6 +153,8 @@ export function CreateRestaurantForm({
             <input
               name="ownerPassword"
               type="text"
+              value={ownerPassword}
+              onChange={(event) => setOwnerPassword(event.target.value)}
               required
               minLength={12}
               className={field}
@@ -137,7 +169,12 @@ export function CreateRestaurantForm({
       </fieldset>
 
       <label className="flex items-center gap-2 text-[0.85rem]">
-        <input type="checkbox" name="exampleMenu" />
+        <input
+          type="checkbox"
+          name="exampleMenu"
+          checked={exampleMenu}
+          onChange={(event) => setExampleMenu(event.target.checked)}
+        />
         Start with an example menu, for demoing
       </label>
 
