@@ -33,11 +33,16 @@
     "This product resizes photos uploaded by restaurant owners, so image-decoding",
     "CVEs are directly reachable, not theoretical. Pinned to the patched line.",
     "postcss: Next bundles a nested 8.4.31 with three advisories; our own copy is",
-    "already patched. Both are drop-in patch upgrades within the same major."
+    "already patched. Both are drop-in patch upgrades within the same major.",
+    "nanoid: reached in production as next -> postcss -> nanoid, so pinning postcss",
+    "alone does not clear it (GHSA-2v37-7h3g-55p8, a zero size loops forever).",
+    "postcss asks for ^3.3.16, so ^3.3.17 is in range and needs no forcing. Stay on",
+    "the 3.x line: nanoid 5+ is ESM-only and postcss requires it from CommonJS."
   ],
   "overrides": {
     "sharp": "^0.35.3",
-    "postcss": "^8.5.25"
+    "postcss": "^8.5.25",
+    "nanoid": "^3.3.17"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
