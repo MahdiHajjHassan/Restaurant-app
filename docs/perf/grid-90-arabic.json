@@ -1,0 +1,63 @@
+{
+  "url": "http://perf-lab.localhost:3200/ar",
+  "label": "grid-90-arabic",
+  "measuredAt": "2026-08-09T12:47:10.283Z",
+  "scores": [
+    87,
+    97,
+    97,
+    97,
+    96
+  ],
+  "median": 97,
+  "metrics": {
+    "fcp": "1.5 s",
+    "lcp": "2.5 s",
+    "tbt": "20 ms",
+    "cls": "0.001",
+    "speedIndex": "1.5 s"
+  },
+  "failing": [
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.89,
+      "displayValue": "2.5 s",
+      "savingsMs": null
+    },
+    {
+      "id": "max-potential-fid",
+      "title": "Max Potential First Input Delay",
+      "score": 0.59,
+      "displayValue": "220 ms",
+      "savingsMs": null
+    },
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.81,
+      "displayValue": "4.6 s",
+      "savingsMs": null
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 0
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "network-dependency-tree-insight",
+      "title": "Network dependency tree",
+      "score": 0,
+      "savingsMs": null
+    }
+  ]
+}

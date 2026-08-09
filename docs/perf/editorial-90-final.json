@@ -1,0 +1,74 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "editorial-90-final",
+  "measuredAt": "2026-08-09T12:48:19.035Z",
+  "scores": [
+    91,
+    98,
+    95
+  ],
+  "median": 95,
+  "metrics": {
+    "fcp": "1.5 s",
+    "lcp": "2.8 s",
+    "tbt": "40 ms",
+    "cls": "0",
+    "speedIndex": "1.5 s"
+  },
+  "failing": [
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.83,
+      "displayValue": "2.8 s",
+      "savingsMs": null
+    },
+    {
+      "id": "max-potential-fid",
+      "title": "Max Potential First Input Delay",
+      "score": 0.56,
+      "displayValue": "230 ms",
+      "savingsMs": null
+    },
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.85,
+      "displayValue": "4.3 s",
+      "savingsMs": null
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 0
+    },
+    {
+      "id": "forced-reflow-insight",
+      "title": "Forced reflow",
+      "score": 0,
+      "savingsMs": null
+    },
+    {
+      "id": "image-delivery-insight",
+      "title": "Improve image delivery",
+      "score": 0.5,
+      "displayValue": "Est savings of 154 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "network-dependency-tree-insight",
+      "title": "Network dependency tree",
+      "score": 0,
+      "savingsMs": null
+    }
+  ]
+}

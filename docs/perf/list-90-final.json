@@ -1,0 +1,49 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "list-90-final",
+  "measuredAt": "2026-08-09T12:47:49.136Z",
+  "scores": [
+    94,
+    94,
+    97,
+    94,
+    97
+  ],
+  "median": 94,
+  "metrics": {
+    "fcp": "1.7 s",
+    "lcp": "3.0 s",
+    "tbt": "60 ms",
+    "cls": "0",
+    "speedIndex": "1.7 s"
+  },
+  "failing": [
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 150
+    },
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.79,
+      "displayValue": "3.0 s",
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "network-dependency-tree-insight",
+      "title": "Network dependency tree",
+      "score": 0,
+      "savingsMs": null
+    }
+  ]
+}
