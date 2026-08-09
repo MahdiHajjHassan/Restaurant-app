@@ -22,6 +22,9 @@
     "db:seed": "psql -U postgres -h localhost -d restaurant_platform_dev -v ON_ERROR_STOP=1 -f scripts/db/seed.sql",
     "db:seed:media": "node scripts/seed-media.ts",
     "fixtures": "node scripts/make-image-fixtures.mjs",
+    "perf:seed": "node scripts/perf/seed-perf-menu.ts",
+    "perf:serve": "next start --port 3200",
+    "perf:measure": "node scripts/perf/lighthouse.mjs",
     "db:studio": "drizzle-kit studio",
     "verify": "npm run typecheck && npm run lint && npm run test"
   },
@@ -56,6 +59,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "lighthouse": "^13.4.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^5",
     "vitest": "^4.1.10"
