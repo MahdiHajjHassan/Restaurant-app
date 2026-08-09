@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { withTenant } from "@/core/db/tenant";
 import { createMediaRepository } from "@/core/media/repository";
@@ -5,6 +6,7 @@ import { createMenuRepository } from "@/core/menu/repository";
 import { toMajorUnits } from "@/core/money/format";
 import { requireMembership } from "@/server/auth";
 import { db } from "@/server/db";
+import { PageHeader } from "@/ui/console";
 import { ItemForm } from "./item-form";
 import { PhotoField } from "./photo-field";
 import { VariantsSection } from "./variants-section";
@@ -41,8 +43,15 @@ export default async function EditItemPage({
   if (!item) notFound();
 
   return (
-    <main className="py-6">
-      <h1 className="font-display text-lg">{item.nameEn}</h1>
+    <main>
+      <Link
+        href={`/${tenantId}`}
+        className="mt-6 inline-block text-[0.825rem] font-medium text-[var(--c-text-muted)] hover:text-[var(--c-text)]"
+      >
+        ← Back to the menu
+      </Link>
+
+      <PageHeader title={item.nameEn} />
 
       <ItemForm
         tenantId={tenantId}

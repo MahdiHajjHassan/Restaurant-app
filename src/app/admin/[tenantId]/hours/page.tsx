@@ -3,6 +3,7 @@ import { withTenant } from "@/core/db/tenant";
 import { getMessages } from "@/core/i18n/messages";
 import { requireMembership } from "@/server/auth";
 import { db } from "@/server/db";
+import { PageHeader } from "@/ui/console";
 import { HoursForm, type DaySlots } from "./hours-form";
 
 export default async function HoursPage({
@@ -28,8 +29,11 @@ export default async function HoursPage({
   }
 
   return (
-    <main className="py-6">
-      <h1 className="font-display text-lg">Opening hours</h1>
+    <main>
+      <PageHeader
+        title="Opening hours"
+        description="Leave a day empty to show it as closed. A shift that runs past midnight is fine — set the closing time to the next morning."
+      />
       <HoursForm
         tenantId={tenantId}
         days={getMessages("en").days}

@@ -17,7 +17,7 @@ interface HoursFormProps {
 const initialState: HoursFormState = { error: null };
 
 const timeField =
-  "price w-full rounded-md border border-[var(--color-rule)] bg-transparent px-2 py-1.5 text-[0.85rem]";
+  "price w-full rounded-md border border-[var(--c-border-strong)] bg-transparent px-2 py-1.5 text-[0.85rem]";
 
 export function HoursForm({ tenantId, days, initial }: HoursFormProps) {
   const action = updateHours.bind(null, tenantId);
@@ -25,7 +25,7 @@ export function HoursForm({ tenantId, days, initial }: HoursFormProps) {
 
   return (
     <form action={formAction} className="mt-5 flex flex-col gap-4">
-      <p className="text-[0.8rem] text-[var(--color-muted)]">
+      <p className="text-[0.8rem] text-[var(--c-text-muted)]">
         Leave a row empty to close that day. Use the second row for a split
         shift. A closing time earlier than the opening time means you close
         after midnight — 18:00 to 01:00 is one evening.
@@ -65,14 +65,14 @@ export function HoursForm({ tenantId, days, initial }: HoursFormProps) {
       {state.error ? (
         <p
           role="alert"
-          className="rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="rounded-md border border-[var(--c-border-strong)] px-3 py-2 text-[0.85rem]"
         >
           {state.error}
         </p>
       ) : null}
 
       {state.saved ? (
-        <p role="status" className="text-[0.85rem] text-[var(--color-accent)]">
+        <p role="status" className="text-[0.85rem] text-[var(--c-brand)]">
           Saved. Your site is updated.
         </p>
       ) : null}
@@ -80,7 +80,7 @@ export function HoursForm({ tenantId, days, initial }: HoursFormProps) {
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-md bg-[var(--color-accent)] px-4 py-2 text-[0.9rem] font-medium text-[var(--color-on-accent)] disabled:opacity-60"
+        className="self-start rounded-md bg-[var(--c-brand)] px-4 py-2 text-[0.9rem] font-medium text-[var(--c-brand-fg)] disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save hours"}
       </button>

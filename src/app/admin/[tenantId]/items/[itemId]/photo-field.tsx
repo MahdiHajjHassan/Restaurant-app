@@ -37,12 +37,12 @@ export function PhotoField({
     <form
       ref={formRef}
       action={formAction}
-      className="mt-6 border-t border-[var(--color-rule)] pt-5"
+      className="mt-6 border-t border-[var(--c-border-strong)] pt-5"
     >
       <p className="text-[0.85rem] font-medium">Photo</p>
 
       <div className="mt-2 flex items-start gap-3">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[var(--color-paper-sunk)]">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[var(--c-surface-sunk)]">
           {preview ? (
             // Local object URL, so the owner sees their photo before it uploads.
             // eslint-disable-next-line @next/next/no-img-element
@@ -79,10 +79,10 @@ export function PhotoField({
               // Submit on pick: one tap in a kitchen, not two.
               if (file) formRef.current?.requestSubmit();
             }}
-            className="block w-full text-[0.8rem] file:me-3 file:rounded-md file:border file:border-[var(--color-rule)] file:bg-transparent file:px-3 file:py-1.5 file:text-[0.8rem] file:text-[var(--color-ink)]"
+            className="block w-full text-[0.8rem] file:me-3 file:rounded-md file:border file:border-[var(--c-border-strong)] file:bg-transparent file:px-3 file:py-1.5 file:text-[0.8rem] file:text-[var(--c-text)]"
           />
 
-          <p className="mt-1.5 text-[0.75rem] text-[var(--color-muted)]">
+          <p className="mt-1.5 text-[0.75rem] text-[var(--c-text-muted)]">
             JPEG, PNG or WebP, up to 8 MB. Location data is removed
             automatically.
           </p>
@@ -94,7 +94,7 @@ export function PhotoField({
                 if (removeRef.current) removeRef.current.value = "true";
                 setPreview(null);
               }}
-              className="mt-2 text-[0.78rem] text-[var(--color-accent)] underline"
+              className="mt-2 text-[0.78rem] text-[var(--c-brand)] underline"
             >
               Remove photo
             </button>
@@ -103,7 +103,7 @@ export function PhotoField({
       </div>
 
       {pending ? (
-        <p role="status" className="mt-2 text-[0.8rem] text-[var(--color-muted)]">
+        <p role="status" className="mt-2 text-[0.8rem] text-[var(--c-text-muted)]">
           Uploading…
         </p>
       ) : null}
@@ -111,7 +111,7 @@ export function PhotoField({
       {state.error ? (
         <p
           role="alert"
-          className="mt-2 rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="mt-2 rounded-md border border-[var(--c-border-strong)] px-3 py-2 text-[0.85rem]"
         >
           {state.error}
         </p>
@@ -122,13 +122,13 @@ export function PhotoField({
         lie, and it is also the only signal telling an owner the change landed.
       */}
       {state.saved && !pending ? (
-        <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
+        <p role="status" className="mt-2 text-[0.85rem] text-[var(--c-brand)]">
           Photo saved. It is on your site now.
         </p>
       ) : null}
 
       {state.removed && !pending ? (
-        <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
+        <p role="status" className="mt-2 text-[0.85rem] text-[var(--c-brand)]">
           Photo removed. The dish still shows on your menu.
         </p>
       ) : null}

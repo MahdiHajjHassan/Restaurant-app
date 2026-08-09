@@ -20,8 +20,8 @@ interface ItemFormProps {
 const initialState: ItemFormState = { error: null };
 
 const field =
-  "rounded-md border border-[var(--color-rule)] bg-transparent px-3 py-2 text-[0.95rem]";
-const label = "text-[0.8rem] text-[var(--color-muted)]";
+  "rounded-md border border-[var(--c-border-strong)] bg-transparent px-3 py-2 text-[0.95rem]";
+const label = "text-[0.8rem] text-[var(--c-text-muted)]";
 
 export function ItemForm({
   tenantId,
@@ -99,7 +99,7 @@ export function ItemForm({
       {state.error ? (
         <p
           role="alert"
-          className="rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="rounded-md border border-[var(--c-border-strong)] px-3 py-2 text-[0.85rem]"
         >
           {state.error}
         </p>
@@ -108,7 +108,7 @@ export function ItemForm({
       {state.saved ? (
         <p
           role="status"
-          className="text-[0.85rem] text-[var(--color-accent)]"
+          className="text-[0.85rem] text-[var(--c-brand)]"
         >
           Saved. Your site is updated.
         </p>
@@ -118,13 +118,13 @@ export function ItemForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-[0.9rem] font-medium text-[var(--color-on-accent)] disabled:opacity-60"
+          className="rounded-md bg-[var(--c-brand)] px-4 py-2 text-[0.9rem] font-medium text-[var(--c-brand-fg)] disabled:opacity-60"
         >
           {pending ? "Saving…" : "Save changes"}
         </button>
         <Link
           href={`/${tenantId}`}
-          className="text-[0.85rem] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+          className="text-[0.85rem] text-[var(--c-text-muted)] hover:text-[var(--c-text)]"
         >
           Back to menu
         </Link>

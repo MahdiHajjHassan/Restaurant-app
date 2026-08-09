@@ -39,7 +39,7 @@ export function LogoField({
       <p className="text-[0.85rem] font-medium">Logo</p>
 
       <div className="mt-2 flex items-start gap-3">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--color-paper-sunk)]">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--c-surface-sunk)]">
           {currentLogo ? (
             <Image
               src={`/storage/${currentLogo.storageKey}`}
@@ -50,7 +50,7 @@ export function LogoField({
               className="h-full w-full object-contain"
             />
           ) : (
-            <span className="text-[0.7rem] text-[var(--color-muted)]">None</span>
+            <span className="text-[0.7rem] text-[var(--c-text-muted)]">None</span>
           )}
         </div>
 
@@ -63,10 +63,10 @@ export function LogoField({
             onChange={(event) => {
               if (event.target.files?.[0]) formRef.current?.requestSubmit();
             }}
-            className="block w-full text-[0.8rem] file:me-3 file:rounded-md file:border file:border-[var(--color-rule)] file:bg-transparent file:px-3 file:py-1.5 file:text-[0.8rem] file:text-[var(--color-ink)]"
+            className="block w-full text-[0.8rem] file:me-3 file:rounded-md file:border file:border-[var(--c-border-strong)] file:bg-transparent file:px-3 file:py-1.5 file:text-[0.8rem] file:text-[var(--c-text)]"
           />
 
-          <p className="mt-1.5 text-[0.75rem] text-[var(--color-muted)]">
+          <p className="mt-1.5 text-[0.75rem] text-[var(--c-text-muted)]">
             Shown instead of your name at the top of your site. Wide images work
             best — it is displayed 40 pixels tall.
           </p>
@@ -77,7 +77,7 @@ export function LogoField({
               onClick={() => {
                 if (removeRef.current) removeRef.current.value = "true";
               }}
-              className="mt-2 text-[0.78rem] text-[var(--color-accent)] underline"
+              className="mt-2 text-[0.78rem] text-[var(--c-brand)] underline"
             >
               Remove logo
             </button>
@@ -86,7 +86,7 @@ export function LogoField({
       </div>
 
       {pending ? (
-        <p role="status" className="mt-2 text-[0.8rem] text-[var(--color-muted)]">
+        <p role="status" className="mt-2 text-[0.8rem] text-[var(--c-text-muted)]">
           Uploading…
         </p>
       ) : null}
@@ -94,7 +94,7 @@ export function LogoField({
       {state.error ? (
         <p
           role="alert"
-          className="mt-2 rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="mt-2 rounded-md border border-[var(--c-border-strong)] px-3 py-2 text-[0.85rem]"
         >
           {state.error}
         </p>
@@ -109,13 +109,13 @@ export function LogoField({
         confirmation by a human or a test.
       */}
       {state.saved && !pending ? (
-        <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
+        <p role="status" className="mt-2 text-[0.85rem] text-[var(--c-brand)]">
           Logo saved.
         </p>
       ) : null}
 
       {state.removed && !pending ? (
-        <p role="status" className="mt-2 text-[0.85rem] text-[var(--color-accent)]">
+        <p role="status" className="mt-2 text-[0.85rem] text-[var(--c-brand)]">
           Logo removed. Your restaurant name shows instead.
         </p>
       ) : null}

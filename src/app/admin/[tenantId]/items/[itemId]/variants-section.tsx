@@ -12,9 +12,9 @@ import {
 const initialState: MenuActionState = { error: null };
 
 const field =
-  "rounded-md border border-[var(--color-rule)] bg-transparent px-2 py-1.5 text-[0.9rem]";
+  "rounded-md border border-[var(--c-border-strong)] bg-transparent px-2 py-1.5 text-[0.9rem]";
 const ghost =
-  "rounded-md border border-[var(--color-rule)] px-2 py-1 text-[0.75rem] text-[var(--color-muted)] hover:text-[var(--color-ink)] disabled:opacity-60";
+  "rounded-md border border-[var(--c-border-strong)] px-2 py-1 text-[0.75rem] text-[var(--c-text-muted)] hover:text-[var(--c-text)] disabled:opacity-60";
 
 export interface VariantRow {
   id: string;
@@ -104,7 +104,7 @@ function VariantForm({
       {state.saved ? (
         <p
           role="status"
-          className="basis-full text-[0.8rem] text-[var(--color-accent)]"
+          className="basis-full text-[0.8rem] text-[var(--c-brand)]"
         >
           Size saved.
         </p>
@@ -145,15 +145,15 @@ export function VariantsSection({
   }, [state, router]);
 
   return (
-    <section className="mt-10 border-t border-[var(--color-rule)] pt-5">
-      <h2 className="font-display text-base">Sizes</h2>
-      <p className="mt-1 text-[0.8rem] text-[var(--color-muted)]">
+    <section className="mt-10 border-t border-[var(--c-border-strong)] pt-5">
+      <h2 className="text-base">Sizes</h2>
+      <p className="mt-1 text-[0.8rem] text-[var(--c-text-muted)]">
         Optional. Add Small and Large — each with its own price — and the dish
         shows both on your site.
       </p>
 
       {variants.length > 0 ? (
-        <ul className="mt-3 divide-y divide-[var(--color-rule)]">
+        <ul className="mt-3 divide-y divide-[var(--c-border-strong)]">
           {variants.map((variant) => (
             <VariantForm
               key={variant.id}
@@ -201,7 +201,7 @@ export function VariantsSection({
         {state.saved ? (
           <p
             role="status"
-            className="basis-full text-[0.8rem] text-[var(--color-accent)]"
+            className="basis-full text-[0.8rem] text-[var(--c-brand)]"
           >
             Size added.
           </p>

@@ -15,6 +15,7 @@ export default async function AdminHome() {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
         <EmptyState
+          headingLevel={1}
           title="No restaurant yet"
           description="Your account is not linked to a restaurant. Ask whoever set this up to add you."
         />

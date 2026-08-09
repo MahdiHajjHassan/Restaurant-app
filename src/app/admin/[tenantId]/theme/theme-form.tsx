@@ -44,7 +44,7 @@ const TOKEN_LABELS: Record<(typeof THEME_TOKENS)[number], string> = {
 };
 
 const card =
-  "rounded-lg border border-[var(--color-rule)] p-3 text-start transition-colors";
+  "rounded-lg border border-[var(--c-border-strong)] p-3 text-start transition-colors";
 
 export function ThemeForm({
   tenantId,
@@ -86,7 +86,7 @@ export function ThemeForm({
               key={id}
               className={`${card} cursor-pointer ${
                 paletteId === id
-                  ? "border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]"
+                  ? "border-[var(--c-brand)] ring-1 ring-[var(--c-brand)]"
                   : ""
               }`}
             >
@@ -108,7 +108,7 @@ export function ThemeForm({
                 {(["paper", "ink", "accent"] as const).map((token) => (
                   <span
                     key={token}
-                    className="h-6 w-6 rounded-full border border-[var(--color-rule)]"
+                    className="h-6 w-6 rounded-full border border-[var(--c-border-strong)]"
                     style={{ background: PALETTES[id][token] }}
                   />
                 ))}
@@ -127,7 +127,7 @@ export function ThemeForm({
               key={id}
               className={`${card} cursor-pointer ${
                 fontPair === id
-                  ? "border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]"
+                  ? "border-[var(--c-brand)] ring-1 ring-[var(--c-brand)]"
                   : ""
               }`}
             >
@@ -158,7 +158,7 @@ export function ThemeForm({
               key={id}
               className={`${card} flex cursor-pointer flex-col ${
                 preset === id
-                  ? "border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]"
+                  ? "border-[var(--c-brand)] ring-1 ring-[var(--c-brand)]"
                   : ""
               }`}
             >
@@ -171,7 +171,7 @@ export function ThemeForm({
                 className="sr-only"
               />
               <span className="text-[0.85rem]">{PRESET_LABELS[id].name}</span>
-              <span className="text-[0.75rem] text-[var(--color-muted)]">
+              <span className="text-[0.75rem] text-[var(--c-text-muted)]">
                 {PRESET_LABELS[id].hint}
               </span>
             </label>
@@ -183,7 +183,7 @@ export function ThemeForm({
         <fieldset>
           <legend className="text-[0.85rem] font-medium">
             Exact colours{" "}
-            <span className="font-normal text-[var(--color-muted)]">
+            <span className="font-normal text-[var(--c-text-muted)]">
               (operator only)
             </span>
           </legend>
@@ -214,7 +214,7 @@ export function ThemeForm({
                         [token]: event.target.value,
                       }))
                     }
-                    className="h-8 w-10 shrink-0 rounded border border-[var(--color-rule)] bg-transparent"
+                    className="h-8 w-10 shrink-0 rounded border border-[var(--c-border-strong)] bg-transparent"
                   />
                   {overridden ? (
                     <input
@@ -226,7 +226,7 @@ export function ThemeForm({
                   <span className="text-[0.78rem]">
                     {TOKEN_LABELS[token]}
                     {overridden ? (
-                      <span className="text-[var(--color-muted)]"> ·</span>
+                      <span className="text-[var(--c-text-muted)]"> ·</span>
                     ) : null}
                   </span>
                 </label>
@@ -238,7 +238,7 @@ export function ThemeForm({
             <button
               type="button"
               onClick={() => setOverrides({})}
-              className="mt-2 text-[0.78rem] text-[var(--color-accent)] underline"
+              className="mt-2 text-[0.78rem] text-[var(--c-brand)] underline"
             >
               Reset colours to the palette
             </button>
@@ -248,6 +248,19 @@ export function ThemeForm({
 
       <section>
         <h2 className="text-[0.85rem] font-medium">Preview</h2>
+        {/*
+          EVERYTHING BELOW USES --color-*, NOT THE CONSOLE'S --c-*.
+
+          This block renders the tenant's menu, not console chrome, so it has to
+          resolve against the palette being previewed. Converting these to
+          console tokens would leave the preview showing the console's colours
+          whatever the owner picked -- a preview that cannot change is worse
+          than none.
+
+          The style attribute below is also how `admin-theme.spec` finds this
+          element: `[style*='--color-accent']`, taking the LAST match. Do not
+          give any console element an inline style naming that variable.
+        */}
         <div
           style={previewVars as React.CSSProperties}
           className="mt-2 rounded-lg border border-[var(--color-rule)] bg-[var(--color-paper)] p-4 text-[var(--color-ink)]"
@@ -280,10 +293,10 @@ export function ThemeForm({
       {blocking.length > 0 ? (
         <div
           role="alert"
-          className="rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="rounded-md border border-[var(--c-border-strong)] px-3 py-2 text-[0.85rem]"
         >
           <p className="font-medium">These colours would be hard to read.</p>
-          <ul className="mt-1 list-disc ps-4 text-[var(--color-muted)]">
+          <ul className="mt-1 list-disc ps-4 text-[var(--c-text-muted)]">
             {blocking.map((issue) => (
               <li key={`${issue.foreground}-${issue.background}`}>
                 {TOKEN_LABELS[issue.foreground]} on{" "}
@@ -297,7 +310,7 @@ export function ThemeForm({
       ) : null}
 
       {warnings.length > 0 ? (
-        <p className="text-[0.8rem] text-[var(--color-muted)]">
+        <p className="text-[0.8rem] text-[var(--c-text-muted)]">
           Your accent colour is faint against the background. It will still
           save, but links and buttons may be easy to miss.
         </p>
@@ -306,14 +319,14 @@ export function ThemeForm({
       {state.error ? (
         <p
           role="alert"
-          className="rounded-md border border-[var(--color-rule)] px-3 py-2 text-[0.85rem]"
+          className="rounded-md border border-[var(--c-border-strong)] px-3 py-2 text-[0.85rem]"
         >
           {state.error}
         </p>
       ) : null}
 
       {state.saved ? (
-        <p role="status" className="text-[0.85rem] text-[var(--color-accent)]">
+        <p role="status" className="text-[0.85rem] text-[var(--c-brand)]">
           Saved. Your site is updated.
         </p>
       ) : null}
@@ -321,7 +334,7 @@ export function ThemeForm({
       <button
         type="submit"
         disabled={pending || blocking.length > 0}
-        className="self-start rounded-md bg-[var(--color-accent)] px-4 py-2 text-[0.9rem] font-medium text-[var(--color-on-accent)] disabled:opacity-60"
+        className="self-start rounded-md bg-[var(--c-brand)] px-4 py-2 text-[0.9rem] font-medium text-[var(--c-brand-fg)] disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save look"}
       </button>

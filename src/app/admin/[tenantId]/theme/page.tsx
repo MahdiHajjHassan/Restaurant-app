@@ -4,6 +4,7 @@ import { createThemeRepository } from "@/core/theme/repository";
 import { THEME_TOKENS, type PaletteOverrides } from "@/core/theme/tokens";
 import { requireMembership } from "@/server/auth";
 import { db } from "@/server/db";
+import { PageHeader } from "@/ui/console";
 import { LogoField } from "./logo-field";
 import { ThemeForm } from "./theme-form";
 
@@ -42,13 +43,13 @@ export default async function ThemeAdminPage({
   }
 
   return (
-    <main className="py-6">
-      <h1 className="font-display text-lg">Look</h1>
-      <p className="mt-1 text-[0.8rem] text-[var(--color-muted)]">
-        Colours, lettering, and layout for your site. Changes show immediately.
-      </p>
+    <main>
+      <PageHeader
+        title="Look"
+        description="Colours, lettering, and layout for your site. Changes show immediately."
+      />
 
-      <div className="mt-5 border-b border-[var(--color-rule)] pb-5">
+      <div className="mb-5 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] p-4 sm:p-5">
         <LogoField
           tenantId={membership.tenantId}
           restaurantName={membership.tenantName}

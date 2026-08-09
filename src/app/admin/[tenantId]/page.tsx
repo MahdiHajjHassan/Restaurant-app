@@ -27,6 +27,7 @@ export default async function MenuAdminPage({
     return (
       <main className="py-8">
         <EmptyState
+          headingLevel={1}
           title="Let’s build your menu"
           description="Start with a section — Starters, Grills, Drinks — then add dishes to it. Nothing shows on your site until a section has a dish in it, so you can build it in any order."
         />
