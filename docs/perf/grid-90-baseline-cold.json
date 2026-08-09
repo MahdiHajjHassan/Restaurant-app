@@ -1,0 +1,73 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "grid-90-baseline-cold",
+  "measuredAt": "2026-08-09T10:44:54.056Z",
+  "scores": [
+    85,
+    83,
+    83
+  ],
+  "median": 83,
+  "metrics": {
+    "fcp": "1.3 s",
+    "lcp": "4.8 s",
+    "tbt": "30 ms",
+    "cls": "0",
+    "speedIndex": "1.3 s"
+  },
+  "failing": [
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 300
+    },
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.31,
+      "displayValue": "4.8 s",
+      "savingsMs": null
+    },
+    {
+      "id": "max-potential-fid",
+      "title": "Max Potential First Input Delay",
+      "score": 0.69,
+      "displayValue": "190 ms",
+      "savingsMs": null
+    },
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.75,
+      "displayValue": "5.1 s",
+      "savingsMs": null
+    },
+    {
+      "id": "forced-reflow-insight",
+      "title": "Forced reflow",
+      "score": 0,
+      "savingsMs": null
+    },
+    {
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0.5,
+      "savingsMs": null
+    }
+  ]
+}

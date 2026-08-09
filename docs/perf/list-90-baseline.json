@@ -1,0 +1,55 @@
+{
+  "url": "http://perf-lab.localhost:3200/",
+  "label": "list-90-baseline",
+  "measuredAt": "2026-08-09T10:46:52.007Z",
+  "scores": [
+    90,
+    90,
+    90
+  ],
+  "median": 90,
+  "metrics": {
+    "fcp": "1.2 s",
+    "lcp": "3.6 s",
+    "tbt": "70 ms",
+    "cls": "0",
+    "speedIndex": "1.2 s"
+  },
+  "failing": [
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 27 KiB",
+      "savingsMs": 150
+    },
+    {
+      "id": "largest-contentful-paint",
+      "title": "Largest Contentful Paint",
+      "score": 0.61,
+      "displayValue": "3.6 s",
+      "savingsMs": null
+    },
+    {
+      "id": "interactive",
+      "title": "Time to Interactive",
+      "score": 0.89,
+      "displayValue": "3.9 s",
+      "savingsMs": null
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "title": "Legacy JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 13 KiB",
+      "savingsMs": null
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0,
+      "displayValue": "Est savings of 400 ms",
+      "savingsMs": null
+    }
+  ]
+}
