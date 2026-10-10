@@ -7,10 +7,10 @@ I'm building a restaurant website product around three connected experiences: a 
 *Personal product · Source-backed development showcase · No hosted rollout verified in this portfolio review*
 
 <picture>
-  <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-mobile-dark.svg">
-  <source media="(max-width: 520px)" srcset="assets/restaurant-story-mobile-light.svg">
-  <source media="(prefers-color-scheme: dark)" srcset="assets/restaurant-story-dark.svg">
-  <img src="assets/restaurant-story-light.svg" alt="Concept illustration of restaurant onboarding, owner menu maintenance, and bilingual guest browsing." width="680">
+  <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-v2-mobile-dark.svg">
+  <source media="(max-width: 520px)" srcset="assets/restaurant-story-v2-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/restaurant-story-v2-dark.svg">
+  <img src="assets/restaurant-story-v2-light.svg" alt="Restaurant website concept: a branded browser and bilingual guest phone share a restaurant identity with owner menu, photo, brand, and hours controls." width="680">
 </picture>
 
 *Concept illustration of the product roles; not an application screenshot.*

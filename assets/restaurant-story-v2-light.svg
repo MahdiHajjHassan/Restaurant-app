@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="424" viewBox="0 0 680 424" role="img" aria-labelledby="restaurantTitle restaurantDesc" data-model="branded-browser-phone-and-owner-controls" data-variant="desktop" data-version="v2">
+<title id="restaurantTitle">A restaurant&#x27;s identity across its website, menu, and owner tools</title>
+<desc id="restaurantDesc">Concept illustration, not an application screenshot. A branded restaurant browser, bilingual guest menu on a phone, and owner controls for menu, photos, and branding share the same restaurant identity and example domain. No ordering or payment feature is implied.</desc>
+<style>text{font-family:Segoe UI,Arial,sans-serif}path,rect,circle,ellipse{shape-rendering:geometricPrecision}</style>
+<rect x="0" y="0" width="680" height="424" rx="18" fill="#faf8f3" stroke="none" stroke-width="1.5"/>
+<text x="24" y="29" font-size="14" font-weight="600" fill="#9d4922" text-anchor="start">WEBSITE + MENU CONCEPT</text>
+<text x="24" y="64" font-size="27" font-weight="600" fill="#24313b" text-anchor="start">One restaurant. Its own identity.</text>
+<rect x="28" y="104" width="377" height="260" rx="12" fill="#ffffff" stroke="#d9dedb" stroke-width="1.5"/>
+<rect x="28" y="104" width="377" height="36" rx="12" fill="#eef0eb" stroke="none" stroke-width="1.5"/>
+<circle cx="43" cy="123" r="3" fill="#53646d" stroke="none" stroke-width="1.5"/>
+<circle cx="55" cy="123" r="3" fill="#53646d" stroke="none" stroke-width="1.5"/>
+<circle cx="67" cy="123" r="3" fill="#53646d" stroke="none" stroke-width="1.5"/>
+<text x="93" y="129" font-size="16" font-weight="400" fill="#53646d" text-anchor="start">restaurant.example</text>
+<rect x="44" y="156" width="343" height="55" rx="5" fill="#f9ebdd" stroke="none" stroke-width="1.5"/>
+<text x="59" y="192" font-size="22" font-weight="600" fill="#24313b" text-anchor="start">A restaurant&#x27;s own website</text>
+<circle cx="92" cy="267" r="33" fill="#ffffff" stroke="#9d4922" stroke-width="1.5"/>
+<circle cx="92" cy="267" r="27" fill="#f9ebdd" stroke="#d9dedb" stroke-width="1.5"/>
+<path d="M83 272Q92 253 102 271 M89 264L97 275" fill="none" stroke="#9d4922" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="143" y="250" font-size="20" font-weight="600" fill="#24313b" text-anchor="start">Seasonal menu</text>
+<text x="143" y="278" font-size="17" font-weight="400" fill="#24313b" text-anchor="start">Dishes + categories</text>
+<path d="M143 299H355 M143 317H323" fill="none" stroke="#d9dedb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="55" y="345" font-size="17" font-weight="400" fill="#53646d" text-anchor="start">English / Arabic</text>
+<rect x="352" y="224" width="112" height="156" rx="14" fill="#ffffff" stroke="#9d4922" stroke-width="1.5"/>
+<rect x="382" y="231" width="52" height="5" rx="3" fill="#9d4922" stroke="none" stroke-width="1.5"/>
+<text x="408" y="259" font-size="18" font-weight="600" fill="#24313b" text-anchor="middle">Menu</text>
+<circle cx="408" cy="296" r="23" fill="#ffffff" stroke="#9d4922" stroke-width="1.5"/>
+<circle cx="408" cy="296" r="17" fill="#f9ebdd" stroke="#d9dedb" stroke-width="1.5"/>
+<path d="M399 301Q408 282 418 300 M405 293L413 304" fill="none" stroke="#9d4922" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M368 334H447 M368 348H434" fill="none" stroke="#d9dedb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="482" y="105" font-size="18" font-weight="600" fill="#24313b" text-anchor="start">Owner workspace</text>
+<rect x="482" y="126" width="171" height="211" rx="9" fill="#ffffff" stroke="#d9dedb" stroke-width="1.5"/>
+<text x="497" y="166" font-size="18" font-weight="400" fill="#24313b" text-anchor="start">Menu</text>
+<path d="M591 160H633" fill="none" stroke="#d9dedb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="605" cy="160" r="5" fill="#9d4922" stroke="none" stroke-width="1.5"/>
+<text x="497" y="210" font-size="18" font-weight="400" fill="#24313b" text-anchor="start">Photos</text>
+<path d="M591 204H633" fill="none" stroke="#d9dedb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="614" cy="204" r="5" fill="#9d4922" stroke="none" stroke-width="1.5"/>
+<text x="497" y="254" font-size="18" font-weight="400" fill="#24313b" text-anchor="start">Brand</text>
+<circle cx="594" cy="248" r="6" fill="#9d4922" stroke="none" stroke-width="1.5"/>
+<circle cx="611" cy="248" r="6" fill="#53646d" stroke="none" stroke-width="1.5"/>
+<circle cx="628" cy="248" r="6" fill="#f9ebdd" stroke="none" stroke-width="1.5"/>
+<text x="497" y="298" font-size="18" font-weight="400" fill="#24313b" text-anchor="start">Hours</text>
+<path d="M591 292H633" fill="none" stroke="#d9dedb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="614" cy="292" r="5" fill="#9d4922" stroke="none" stroke-width="1.5"/>
+<path d="M482 354H477V184H414" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5"/>
+<path d="M420 179L414 184L420 189" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="492" y="373" font-size="16" font-weight="400" fill="#53646d" text-anchor="start">One tenant identity</text>
+<path d="M24 382H656" fill="none" stroke="#d9dedb" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="24" y="404" font-size="16" font-weight="400" fill="#53646d" text-anchor="start">Concept only · Domain, branding, menu, and photo controls · No ordering implied</text>
+</svg>
