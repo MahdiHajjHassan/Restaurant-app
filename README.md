@@ -2,9 +2,9 @@
 
 ## Branded restaurant sites. One shared engine.
 
-I'm building a restaurant website product around three connected experiences: a guest discovering a menu, an owner keeping it current, and an operator bringing another restaurant onto the service. Each restaurant gets its own identity and bilingual content, while the application shares its engineering underneath.
+I developed a restaurant website product around three connected experiences: a guest discovering a menu, an owner keeping it current, and an operator bringing another restaurant onto the service. Each restaurant gets its own identity and bilingual content, while the application shares its engineering underneath.
 
-*Personal product · Source-backed development showcase · No hosted rollout verified in this portfolio review*
+*Personal product · Source-backed application showcase · No hosted rollout verified in this portfolio review*
 
 <picture>
   <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-v2-mobile-dark.svg">
@@ -23,7 +23,7 @@ The product's central idea is repeatable restaurant onboarding with owner contro
 
 ### My contribution
 
-This is my independent restaurant application. The engineering story connects hostname-based tenant routing, owner and operator tools, reusable themes, bilingual interfaces, menu data, and media processing in one codebase. The architecture section below explains the boundaries visible in the current source.
+I developed the application and connected hostname-based tenant routing, owner and operator tools, reusable themes, bilingual interfaces, menu data, and media processing in one codebase. The architecture section below explains the boundaries visible in the current source.
 
 <details>
 <summary><strong>Engineering details and design decisions</strong></summary>
@@ -57,14 +57,14 @@ flowchart TB
 | Localization | English and Arabic routes, paired content fields, and right-to-left presentation. |
 | Photos | Orientation correction, resizing, WebP encoding, and local storage behind an adapter. |
 
-- [Current architecture and future concept](docs/portfolio-architecture.md)
+- [Application architecture and ordering design study](docs/portfolio-architecture.md)
 - [Product journeys and interaction design](docs/portfolio-product-design.md)
 
 </details>
 
-### What comes next
+### Delivered scope
 
-Ordering, payment integration, automatic DNS verification, and a mobile application belong to the roadmap. The future concept diagram is labelled accordingly. They are not presented as current capabilities.
+This showcase covers restaurant websites, bilingual menus, owner controls, and onboarding. A separate ordering design study documents an extension; it is not evidence of implemented ordering, payment integration, automatic DNS verification, or a mobile application.
 
 The repository includes tests and local performance records. This portfolio review inspected source but did not execute those checks or verify a customer deployment.
 

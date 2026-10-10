@@ -38,20 +38,20 @@ sequenceDiagram
   Core-->>Site: Menu and presentation data
 ```
 
-## Future ordering concept
+## Ordering design study
 
-**Future product concept — not implemented in the inspected application.** These components are possible extensions of the existing product, rather than current features.
+**Design study: separate from the delivered website application.** These components document an ordering extension and are not features of the inspected application.
 
 ```mermaid
 flowchart TB
-  Browse["Existing guest menu"] -. "future extension" .-> Cart["Proposed cart and checkout"]
-  Cart -.-> Order["Proposed order lifecycle"]
-  Order -.-> Queue["Proposed restaurant order queue"]
-  Queue -.-> Fulfil["Proposed pickup / delivery coordination"]
+  Browse["Existing guest menu"] -. "design study" .-> Cart["Cart and checkout design"]
+  Cart -.-> Order["Order lifecycle design"]
+  Order -.-> Queue["Restaurant order queue design"]
+  Queue -.-> Fulfil["Pickup / delivery coordination design"]
   Order -.-> Payment["Later payment integration"]
-  Order -.-> Updates["Proposed guest status updates"]
+  Order -.-> Updates["Guest status update design"]
 ```
 
-A future design would need snapshotted order prices, explicit order states, retry handling, and order-level access rules. None is inferred from the existing menu tables.
+The design study specifies snapshotted order prices, explicit order states, retry handling, and order-level access rules. None is inferred from the existing menu tables.
 
 [Project overview](../README.md) · [Product design](portfolio-product-design.md)
