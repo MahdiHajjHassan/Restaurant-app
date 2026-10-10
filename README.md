@@ -1,19 +1,19 @@
 # Restaurant Websites
 
+> [!CAUTION]
+> **Portfolio scope.**
+> This showcase explains the restaurant website application and its source-backed design. Illustrations are explanatory, and ordering is a separate design study. Hosted rollout, payment integration, automatic DNS verification, mobile applications, and test execution were not verified in this portfolio review.
+
 ## Branded restaurant sites. One shared engine.
 
 I developed a restaurant website product around three connected experiences: a guest discovering a menu, an owner keeping it current, and an operator bringing another restaurant onto the service. Each restaurant gets its own identity and bilingual content, while the application shares its engineering underneath.
 
-*Personal product · Source-backed application showcase · No hosted rollout verified in this portfolio review*
-
 <picture>
-  <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-v2-mobile-dark.svg">
-  <source media="(max-width: 520px)" srcset="assets/restaurant-story-v2-mobile-light.svg">
-  <source media="(prefers-color-scheme: dark)" srcset="assets/restaurant-story-v2-dark.svg">
-  <img src="assets/restaurant-story-v2-light.svg" alt="Restaurant website concept: a branded browser and bilingual guest phone share a restaurant identity with owner menu, photo, brand, and hours controls." width="680">
+  <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-v3-mobile-dark.svg">
+  <source media="(max-width: 520px)" srcset="assets/restaurant-story-v3-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/restaurant-story-v3-dark.svg">
+  <img src="assets/restaurant-story-v3-light.svg" alt="A branded restaurant website, bilingual guest menu on a phone, and owner controls for menus, photos, and branding share one restaurant identity." width="680">
 </picture>
-
-*Concept illustration of the product roles; not an application screenshot.*
 
 ### From restaurant setup to a guest's next visit
 
@@ -29,8 +29,6 @@ I developed the application and connected hostname-based tenant routing, owner a
 <summary><strong>Engineering details and design decisions</strong></summary>
 
 ### How the current application fits together
-
-*Architecture overview based on inspected source; not a screenshot or runtime-check result.*
 
 ```mermaid
 flowchart TB
@@ -64,8 +62,6 @@ flowchart TB
 
 ### Delivered scope
 
-This showcase covers restaurant websites, bilingual menus, owner controls, and onboarding. A separate ordering design study documents an extension; it is not evidence of implemented ordering, payment integration, automatic DNS verification, or a mobile application.
-
-The repository includes tests and local performance records. This portfolio review inspected source but did not execute those checks or verify a customer deployment.
+The delivered application connects restaurant websites, bilingual menus, owner controls, and onboarding. The engineering notes also explore an ordering extension.
 
 [Mahdi Hajj Hassan](https://github.com/MahdiHajjHassan)

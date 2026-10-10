@@ -1,8 +1,12 @@
 # Restaurant Websites: architecture and extension points
 
+> [!CAUTION]
+> **Portfolio scope.**
+> This showcase explains the restaurant website application and its source-backed design. Illustrations are explanatory, and ordering is a separate design study. Hosted rollout, payment integration, automatic DNS verification, mobile applications, and test execution were not verified in this portfolio review.
+
 ## Current implementation structure
 
-This overview is grounded in the inspected application source. It explains component responsibilities; it does not certify deployed behavior.
+The application separates public restaurant identity, owner access, platform operations, tenant-scoped data, and media processing.
 
 | Boundary | Responsibility | Why it matters |
 | --- | --- | --- |
@@ -14,11 +18,9 @@ This overview is grounded in the inspected application source. It explains compo
 | Data layer | Tenant-scoped transactions and PostgreSQL row-level security for tenant content. | Isolation is addressed in both application access and database policies. |
 | Media | Validate and process uploads before storing encoded images. | Photo handling has a dedicated boundary rather than arbitrary file writes. |
 
-Domain and membership records participate in resolving a tenant before a tenant-scoped transaction exists. Their authorization must therefore be explicit; the architecture does not claim that every table is protected by RLS.
+Domain and membership records participate in resolving a tenant before a tenant-scoped transaction exists. Their authorization must therefore be explicit; their access controls are evaluated before tenant-scoped content policies.
 
 ## Owner update journey
-
-*Current source-path overview; no update-speed or propagation guarantee is implied.*
 
 ```mermaid
 sequenceDiagram
@@ -40,7 +42,7 @@ sequenceDiagram
 
 ## Ordering design study
 
-**Design study: separate from the delivered website application.** These components document an ordering extension and are not features of the inspected application.
+The ordering design connects menu browsing to a cart, order lifecycle, restaurant queue, and guest updates.
 
 ```mermaid
 flowchart TB
@@ -52,6 +54,6 @@ flowchart TB
   Order -.-> Updates["Guest status update design"]
 ```
 
-The design study specifies snapshotted order prices, explicit order states, retry handling, and order-level access rules. None is inferred from the existing menu tables.
+The design study specifies snapshotted order prices, explicit order states, retry handling, and order-level access rules. These contracts sit alongside the menu and tenant boundaries.
 
 [Project overview](../README.md) · [Product design](portfolio-product-design.md)
