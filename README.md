@@ -1,12 +1,15 @@
 # Restaurant Websites
 
 > [!CAUTION]
-> **Portfolio scope.**
-> This showcase explains the restaurant website application and its source-backed design. Illustrations are explanatory, and ordering is a separate design study. Hosted rollout, payment integration, automatic DNS verification, mobile applications, and test execution were not verified in this portfolio review.
+> **Public application and design study.** The website features described here are grounded in the public source. Diagrams explain the product. Ordering is a separate design study; deployment, payments, automatic DNS verification and test results are not established by this showcase.
 
-## Branded restaurant sites. One shared engine.
+## Each restaurant's own website, managed through one shared application
 
-I developed a restaurant website product around three connected experiences: a guest discovering a menu, an owner keeping it current, and an operator bringing another restaurant onto the service. Each restaurant gets its own identity and bilingual content, while the application shares its engineering underneath.
+Restaurant owners need to keep their menu, photos, hours, and branding current. Guests need a clear menu on their phone. I developed a shared website product that gave each restaurant its own domain and identity, with English and Arabic content.
+
+**My contribution:** the application, domain-based restaurant routing, owner and operator tools, bilingual interfaces, themes, menu data, and photo processing.
+
+**Tools:** Next.js · React · TypeScript · PostgreSQL · Drizzle
 
 <picture>
   <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-v3-mobile-dark.svg">
@@ -15,20 +18,22 @@ I developed a restaurant website product around three connected experiences: a g
   <img src="assets/restaurant-story-v3-light.svg" alt="A branded restaurant website, bilingual guest menu on a phone, and owner controls for menus, photos, and branding share one restaurant identity." width="680">
 </picture>
 
-### From restaurant setup to a guest's next visit
+### Three people, three clear jobs
 
-The operator creates the restaurant and its owner's access. The owner shapes the site's theme, organizes menu sections, edits dishes and sizes, sets availability, uploads photos, and maintains opening hours. Guests see the restaurant's customer-facing site in English or Arabic.
+| Person | What they do |
+| --- | --- |
+| Guest | Browse dishes, sizes, prices, availability, hours, and contact details. |
+| Restaurant owner | Maintain menus, photos, language content, and branding. |
+| Platform operator | Set up restaurant accounts, domains, status, and support access. |
 
-The product's central idea is repeatable restaurant onboarding with owner control: shared infrastructure does the heavy lifting, while each business keeps its brand and content.
+The operator creates the restaurant and owner account. The owner edits the content and appearance. Guests see that restaurant's branded site in their chosen language.
 
-### My contribution
+### Why the shared application matters
 
-I developed the application and connected hostname-based tenant routing, owner and operator tools, reusable themes, bilingual interfaces, menu data, and media processing in one codebase. The architecture section below explains the boundaries visible in the current source.
+New restaurants use the same application and onboarding process while retaining their own content and identity. Owner tools and platform tools have different permissions; restaurant data stays tied to its business.
 
 <details>
-<summary><strong>Engineering details and design decisions</strong></summary>
-
-### How the current application fits together
+<summary><strong>Engineering details: restaurant isolation, domains, and owner tools</strong></summary>
 
 ```mermaid
 flowchart TB
@@ -45,23 +50,19 @@ flowchart TB
   Site --> Storage
 ```
 
-| Area | Current source approach |
+| Area | Approach |
 | --- | --- |
 | Application | Next.js, React, and TypeScript. |
-| Data | PostgreSQL and Drizzle; tenant-scoped repository access and row-level security for tenant content. |
-| Identity | Verified-domain resolution for public sites; session and membership checks for owner actions. |
-| Product surfaces | Separate guest sites, owner controls, and operator onboarding/support routes. |
-| Branding | Theme configuration, palettes, logos, and reusable menu presentations. |
-| Localization | English and Arabic routes, paired content fields, and right-to-left presentation. |
-| Photos | Orientation correction, resizing, WebP encoding, and local storage behind an adapter. |
+| Database | PostgreSQL and Drizzle, with restaurant-scoped access and row-level security. |
+| Public identity | Match a verified hostname to the restaurant. |
+| Owner access | Check the session and restaurant membership before changes. |
+| Platform operations | Separate onboarding and support permissions. |
+| Branding and language | Reusable themes, palettes, logos, English/Arabic content, and right-to-left layouts. |
+| Photos | Correct orientation, resize, encode as WebP, and store through an adapter. |
 
-- [Application architecture and ordering design study](docs/portfolio-architecture.md)
-- [Product journeys and interaction design](docs/portfolio-product-design.md)
+- [Application architecture](docs/portfolio-architecture.md)
+- [Guest, owner, and operator journeys](docs/portfolio-product-design.md)
 
 </details>
 
-### Delivered scope
-
-The delivered application connects restaurant websites, bilingual menus, owner controls, and onboarding. The engineering notes also explore an ordering extension.
-
-[Mahdi Hajj Hassan](https://github.com/MahdiHajjHassan)
+[Back to my portfolio](https://github.com/MahdiHajjHassan)

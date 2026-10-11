@@ -1,28 +1,31 @@
-# Restaurant Websites: product journeys
+# Restaurant Websites | Guest, Owner, and Operator Journeys
 
 > [!CAUTION]
-> **Portfolio scope.**
-> This showcase explains the restaurant website application and its source-backed design. Illustrations are explanatory, and ordering is a separate design study. Hosted rollout, payment integration, automatic DNS verification, mobile applications, and test execution were not verified in this portfolio review.
+> **Public application and design study.** The website features described here are grounded in the public source. Diagrams explain the product. Ordering is a separate design study; deployment, payments, automatic DNS verification and test results are not established by this showcase.
 
-## Product intent
+Each restaurant's site should feel like its own business. The shared application keeps onboarding and content maintenance consistent across restaurant accounts.
 
-Make a restaurant's customer site feel like its own business, while keeping onboarding and content maintenance repeatable across restaurants. The following journeys describe the product structure observed in source.
+## The three experiences
 
-| Person | Primary task | Design emphasis |
+| Person | Main task | Design decision |
 | --- | --- | --- |
-| Guest | Browse dishes, prices, availability, and restaurant information. | A readable mobile menu and a clear language choice. |
-| Owner | Keep sections, dishes, sizes, photos, hours, and branding current. | Direct controls close to the content being changed. |
-| Operator | Create and support restaurant accounts and domains. | An explicit restaurant identity, status, and support context. |
+| Guest | Browse dishes, prices, availability, hours, and contacts. | A readable mobile menu and a clear English/Arabic choice. |
+| Owner | Edit menus, photos, opening hours, and branding. | Controls grouped around the content being changed. |
+| Operator | Create and support restaurant accounts and domains. | A visible restaurant identity, status, and support context. |
 
-## Product journey storyboard
+## From setup to guest browsing
 
-1. **Bring a restaurant onto the service.** Connect tenant setup to owner access.
-2. **Make it recognizably theirs.** Connect brand and theme controls to the guest site.
-3. **Keep the menu current.** Bring section management, quick item entry, and availability controls together.
-4. **Meet the guest where they are.** Provide English/Arabic presentation and a menu that reads clearly on a phone.
+1. The operator creates the restaurant account and owner access.
+2. The owner selects branding and theme settings.
+3. The owner organizes sections, dishes, sizes, prices, availability, and photos.
+4. Guests browse the branded menu in English or Arabic.
 
-## Design decisions worth explaining
+## Product engineering decisions
 
-Menu editing, customer browsing, and operator support are different tasks. Give them distinct presentations and make the active restaurant context visible. Explain bilingual layout, integer price storage, and tenant-specific branding as product-engineering decisions.
+- Separate customer browsing, menu editing, and platform support.
+- Keep the active restaurant visible in administrative tools.
+- Store prices as integers to avoid floating-point currency calculations.
+- Keep language content paired and support right-to-left Arabic presentation.
+- Apply restaurant-specific branding through reusable themes.
 
-[Project overview](../README.md) · [Architecture](portfolio-architecture.md)
+[Project overview](../README.md) · [Application architecture](portfolio-architecture.md)

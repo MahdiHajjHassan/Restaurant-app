@@ -1,26 +1,25 @@
-# Restaurant Websites: architecture and extension points
+# Restaurant Websites | Application Architecture
 
 > [!CAUTION]
-> **Portfolio scope.**
-> This showcase explains the restaurant website application and its source-backed design. Illustrations are explanatory, and ordering is a separate design study. Hosted rollout, payment integration, automatic DNS verification, mobile applications, and test execution were not verified in this portfolio review.
+> **Public application and design study.** The website features described here are grounded in the public source. Diagrams explain the product. Ordering is a separate design study; deployment, payments, automatic DNS verification and test results are not established by this showcase.
 
-## Current implementation structure
+The application separates the restaurant a guest visits, the owner's access, platform operations, business data, and photo processing. A tenant is one restaurant account within the shared application.
 
-The application separates public restaurant identity, owner access, platform operations, tenant-scoped data, and media processing.
+## Application responsibilities
 
-| Boundary | Responsibility | Why it matters |
+| Component | Responsibility | Why it matters |
 | --- | --- | --- |
-| Public domain resolution | Match a verified hostname to a restaurant. | A visitor reaches the correct restaurant identity. |
-| Guest presentation | Render theme, bilingual menu content, contacts, and opening hours. | Restaurant content remains distinct from operator tools. |
-| Owner access | Authenticate the session and check restaurant membership for writes. | Being signed in alone is insufficient to administer another restaurant. |
-| Operator access | Provision tenants, manage status/domains, and explicitly enter support access. | Platform operations have their own authority and UI. |
-| Application core | Keep menu, theme, contact, identity, and data logic in focused modules. | Product logic has clear boundaries beneath the route/UI layer. |
-| Data layer | Tenant-scoped transactions and PostgreSQL row-level security for tenant content. | Isolation is addressed in both application access and database policies. |
-| Media | Validate and process uploads before storing encoded images. | Photo handling has a dedicated boundary rather than arbitrary file writes. |
+| Domain lookup | Match a verified hostname to a restaurant. | Guests reach the correct brand and menu. |
+| Guest site | Render themes, bilingual menus, contacts, and hours. | Each restaurant has its own customer-facing content. |
+| Owner access | Check the session and restaurant membership before writes. | Signing in does not grant access to another restaurant. |
+| Operator tools | Set up accounts, manage domains/status, and enter support access. | Platform operations have separate permissions. |
+| Application core | Organize menu, theme, contact, and identity logic. | Routes and UI use focused product modules. |
+| Database | Use scoped transactions and PostgreSQL row-level security. | Business data is isolated in application access and database policies. |
+| Media processing | Validate uploads, correct orientation, resize, and encode images. | Photo handling has defined inputs and storage behavior. |
 
-Domain and membership records participate in resolving a tenant before a tenant-scoped transaction exists. Their authorization must therefore be explicit; their access controls are evaluated before tenant-scoped content policies.
+Domain and membership records identify the restaurant before a scoped content transaction starts. Their access checks therefore occur before the restaurant's content policies apply.
 
-## Owner update journey
+## An owner changes the menu
 
 ```mermaid
 sequenceDiagram
@@ -40,20 +39,20 @@ sequenceDiagram
   Core-->>Site: Menu and presentation data
 ```
 
-## Ordering design study
+## Ordering architecture study
 
-The ordering design connects menu browsing to a cart, order lifecycle, restaurant queue, and guest updates.
+The ordering design connects browsing to a cart, an order lifecycle, a restaurant queue, and guest updates.
 
 ```mermaid
 flowchart TB
-  Browse["Existing guest menu"] -. "design study" .-> Cart["Cart and checkout design"]
+  Browse["Existing guest menu"] -. "ordering design" .-> Cart["Cart and checkout design"]
   Cart -.-> Order["Order lifecycle design"]
   Order -.-> Queue["Restaurant order queue design"]
   Queue -.-> Fulfil["Pickup / delivery coordination design"]
-  Order -.-> Payment["Later payment integration"]
+  Order -.-> Payment["Payment integration design"]
   Order -.-> Updates["Guest status update design"]
 ```
 
-The design study specifies snapshotted order prices, explicit order states, retry handling, and order-level access rules. These contracts sit alongside the menu and tenant boundaries.
+The design specifies saved order prices, explicit order states, retry handling, and access rules for individual orders. These decisions connect the order to the restaurant's existing menu and account structure.
 
-[Project overview](../README.md) · [Product design](portfolio-product-design.md)
+[Project overview](../README.md) · [Product journeys](portfolio-product-design.md)
