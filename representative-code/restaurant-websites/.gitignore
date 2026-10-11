@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.product-data/
+__pycache__/
+*.pyc
+.env
+.env.*
+output/
+cli-data/
+.cli-data/
