@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="878" viewBox="0 0 680 878" role="img" aria-labelledby="restaurantTitle restaurantDesc" data-model="operator-owner-restaurant-scopes-domain-and-guest-menu" data-variant="desktop" data-version="v4">
+<title id="restaurantTitle">A restaurant&#x27;s identity across its website, menu, and owner tools</title>
+<desc id="restaurantDesc">Operator setup and owner edits feed a shared application with each restaurant&#x27;s own content and permissions. Guests browse the restaurant&#x27;s domain and bilingual menu on a phone.</desc>
+<style>text{font-family:Segoe UI,Arial,sans-serif}path,rect,circle,ellipse{shape-rendering:geometricPrecision}</style>
+<rect x="0" y="0" width="680" height="878" rx="18" fill="#f5f7fa" stroke="none" stroke-width="1.5"/>
+<text x="28" y="49" font-size="30" font-weight="600" fill="#1c2d42" text-anchor="start">Each restaurant&#x27;s own identity.</text>
+<text x="28" y="83" font-size="20" font-weight="400" fill="#52647b" text-anchor="start">One application. Separate content and controls.</text>
+<text x="28" y="132" font-size="24" font-weight="600" fill="#1c2d42" text-anchor="start">Operator setup</text>
+<path d="M30 155H50L59 164V193H30Z" fill="#f9ebdd" stroke="#9d4922" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M50 155V164H59 M37 172H52 M37 179H52 M37 186H47" fill="none" stroke="#9d4922" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M44 201V227H70" fill="none" stroke="#ccd7e5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="82" y="174" font-size="19" font-weight="400" fill="#1c2d42" text-anchor="start">Restaurant</text>
+<text x="82" y="202" font-size="19" font-weight="400" fill="#1c2d42" text-anchor="start">Owner account</text>
+<text x="82" y="230" font-size="19" font-weight="400" fill="#1c2d42" text-anchor="start">Domain</text>
+<text x="28" y="278" font-size="18" font-weight="400" fill="#52647b" text-anchor="start">Platform permissions</text>
+<path d="M157 291V311" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M152 305L157 311L162 305" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="348" y="132" font-size="24" font-weight="600" fill="#1c2d42" text-anchor="start">Owner controls</text>
+<rect x="348" y="149" width="304" height="99" rx="12" fill="#ffffff" stroke="#ccd7e5" stroke-width="1.5"/>
+<path d="M348 198H652" fill="none" stroke="#ccd7e5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="364" y="180" font-size="19" font-weight="400" fill="#1c2d42" text-anchor="start">Menus + photos</text>
+<text x="364" y="229" font-size="19" font-weight="400" fill="#1c2d42" text-anchor="start">Hours + branding</text>
+<path d="M577 173H633" fill="none" stroke="#ccd7e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="597.16" cy="173" r="5" fill="#ffffff" stroke="#9d4922" stroke-width="1.8"/>
+<path d="M577 222H633" fill="none" stroke="#ccd7e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="615.08" cy="222" r="5" fill="#ffffff" stroke="#9d4922" stroke-width="1.8"/>
+<text x="348" y="278" font-size="18" font-weight="400" fill="#52647b" text-anchor="start">Restaurant permissions</text>
+<path d="M499 291V311" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M494 305L499 311L504 305" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="28" y="322" width="624" height="140" rx="14" fill="#f9ebdd" stroke="#9d4922" stroke-width="1.5"/>
+<text x="48" y="357" font-size="24" font-weight="600" fill="#1c2d42" text-anchor="start">Shared application</text>
+<path d="M48 374H632 M416 389V443" fill="none" stroke="#9d4922" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="48" y="405" font-size="22" font-weight="600" fill="#1c2d42" text-anchor="start">Restaurant A</text>
+<text x="48" y="436" font-size="18" font-weight="400" fill="#1c2d42" text-anchor="start">Own content + permissions</text>
+<text x="439" y="405" font-size="22" font-weight="600" fill="#1c2d42" text-anchor="start">Restaurant B</text>
+<text x="439" y="436" font-size="18" font-weight="400" fill="#1c2d42" text-anchor="start">Own content + access</text>
+<path d="M229 462V482H558" fill="none" stroke="#9d4922" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M229 482V539" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M224 533L229 539L234 533" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M558 482V539" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M553 533L558 539L563 533" fill="none" stroke="#9d4922" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="28" y="518" font-size="24" font-weight="600" fill="#1c2d42" text-anchor="start">Guests browse</text>
+<rect x="28" y="550" width="404" height="213" rx="14" fill="#ffffff" stroke="#ccd7e5" stroke-width="1.5"/>
+<path d="M28 592H432" fill="none" stroke="#ccd7e5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="44" cy="571" r="3" fill="#52647b" stroke="none" stroke-width="1.5"/>
+<circle cx="56" cy="571" r="3" fill="#52647b" stroke="none" stroke-width="1.5"/>
+<circle cx="68" cy="571" r="3" fill="#52647b" stroke="none" stroke-width="1.5"/>
+<text x="86" y="578" font-size="17" font-weight="400" fill="#52647b" text-anchor="start">Restaurant A&#x27;s domain</text>
+<text x="46" y="628" font-size="26" font-weight="600" fill="#1c2d42" text-anchor="start">Restaurant A</text>
+<path d="M46 646H414" fill="none" stroke="#ccd7e5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="83" cy="694" r="25" fill="#f9ebdd" stroke="#9d4922" stroke-width="1.8"/>
+<circle cx="83" cy="694" r="19" fill="#ffffff" stroke="#9d4922" stroke-width="1.4"/>
+<path d="M51 672V716 M46 672V681 M56 672V681 M116 672V716" fill="none" stroke="#9d4922" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="137" y="684" font-size="20" font-weight="600" fill="#1c2d42" text-anchor="start">Menus + photos</text>
+<text x="137" y="716" font-size="18" font-weight="400" fill="#1c2d42" text-anchor="start">Hours + contact</text>
+<text x="46" y="744" font-size="18" font-weight="600" fill="#9d4922" text-anchor="start">English / Arabic</text>
+<rect x="465" y="550" width="187" height="246" rx="19" fill="#ffffff" stroke="#9d4922" stroke-width="1.8"/>
+<path d="M528.58 561H588.42" fill="none" stroke="#ccd7e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="558.5" y="592" font-size="22" font-weight="600" fill="#1c2d42" text-anchor="middle">A&#x27;s menu</text>
+<path d="M478 608H639" fill="none" stroke="#ccd7e5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="490" cy="632" r="10" fill="#f9ebdd" stroke="#9d4922" stroke-width="1.5"/>
+<path d="M510 627H635 M510 638H622" fill="none" stroke="#ccd7e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="490" cy="679" r="10" fill="#f9ebdd" stroke="#9d4922" stroke-width="1.5"/>
+<path d="M510 674H635 M510 685H622" fill="none" stroke="#ccd7e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="490" cy="726" r="10" fill="#f9ebdd" stroke="#9d4922" stroke-width="1.5"/>
+<path d="M510 721H635 M510 732H622" fill="none" stroke="#ccd7e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="558.5" y="774" font-size="18" font-weight="600" fill="#9d4922" text-anchor="middle">EN / AR</text>
+<path d="M28 820H652" fill="none" stroke="#ccd7e5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="28" y="852" font-size="19" font-weight="400" fill="#52647b" text-anchor="start">Each domain presents its restaurant&#x27;s content.</text>
+</svg>

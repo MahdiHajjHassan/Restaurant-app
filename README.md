@@ -12,10 +12,10 @@ Restaurant owners need to keep their menu, photos, hours, and branding current. 
 **Tools:** Next.js · React · TypeScript · PostgreSQL · Drizzle
 
 <picture>
-  <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-v3-mobile-dark.svg">
-  <source media="(max-width: 520px)" srcset="assets/restaurant-story-v3-mobile-light.svg">
-  <source media="(prefers-color-scheme: dark)" srcset="assets/restaurant-story-v3-dark.svg">
-  <img src="assets/restaurant-story-v3-light.svg" alt="A branded restaurant website, bilingual guest menu on a phone, and owner controls for menus, photos, and branding share one restaurant identity." width="680">
+  <source media="(prefers-color-scheme: dark) and (max-width: 520px)" srcset="assets/restaurant-story-v4-mobile-dark.svg">
+  <source media="(max-width: 520px)" srcset="assets/restaurant-story-v4-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/restaurant-story-v4-dark.svg">
+  <img src="assets/restaurant-story-v4-light.svg" alt="Operator setup and owner edits feed a shared application with each restaurant’s own content and permissions. Guests browse the restaurant’s domain and bilingual menu on a phone." width="680">
 </picture>
 
 ### Three people, three clear jobs
